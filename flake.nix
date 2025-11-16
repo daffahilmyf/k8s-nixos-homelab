@@ -19,6 +19,7 @@
       ./modules/cloudflared.nix
       ./modules/git.nix
       ./modules/ssh.nix
+      ./modules/firewall.nix
       ./modules/guest-agent.nix
       ./modules/cluster-hosts.nix
     ];
