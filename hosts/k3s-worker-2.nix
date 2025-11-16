@@ -15,8 +15,13 @@
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
-  # Workers do not require Git identity; keep disabled.
-  custom.git.enable = false;
+  # Git identity (override with real values or disable if unused).
+  custom.git = {
+    enable = true;
+    email = "your_email@example.com";
+    username = "your_username";
+    fullName = "Your Name";
+  };
 
   # SSH configuration
   #

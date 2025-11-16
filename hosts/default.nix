@@ -22,6 +22,14 @@ in {
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
+  # Default git identity (adjust per host).
+  custom.git = {
+    enable = true;
+    email = "your_email@example.com";
+    username = "your_username";
+    fullName = "Your Name";
+  };
+
   # Enable SSH with password + root login for initial bootstrap (harden later).
   services.openssh = {
     enable = true;
