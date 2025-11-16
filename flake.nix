@@ -59,6 +59,7 @@
         modules =
           sharedModules
           ++ [
+            ./modules/cloudflared.nix
             ./hosts/k3s-control-1.nix
           ];
       };
