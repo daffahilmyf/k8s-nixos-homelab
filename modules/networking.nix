@@ -45,9 +45,9 @@ in {
     };
 
     useDHCP = lib.mkOption {
-      type = lib.types.bool;
-      default = false;
-      description = "Whether to enable DHCP on the primary interface.";
+      type = lib.types.nullOr lib.types.bool;
+      default = null;
+      description = "Whether to enable DHCP on the primary interface (default: true when no static IPv4 is set).";
     };
   };
 
@@ -56,7 +56,7 @@ in {
     networking = {
       hostName = cfg.hostName;
       firewall.enable = lib.mkDefault false;
-      useDHCP = lib.mkForce cfg.useDHCP;
+      useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
       nameservers = lib.mkDefault cfg.nameservers;
       defaultGateway = lib.mkIf (cfg.gateway != null) cfg.gateway;
 
@@ -64,7 +64,7 @@ in {
         lib.mkIf (cfg.interface != null) {
           "${cfg.interface}" =
             {
-              useDHCP = cfg.useDHCP;
+              useDHCP = if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP;
             }
             // lib.optionalAttrs (cfg.staticIPv4 != null) {
               useDHCP = false;
