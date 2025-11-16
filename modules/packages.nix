@@ -3,8 +3,8 @@
   lib,
   ...
 }: {
-  # Default tools
-  environment.systemPackages = lib.mkDefault (with pkgs; [
+  # Default tools installed on every host
+  environment.systemPackages = with pkgs; [
     curl
     wget
     git
@@ -14,11 +14,7 @@
     jq
     yq
     sops
-    kubectl
-    kubernetes-helm
-    k9s
-    cloudflared
-  ]);
+  ];
 
   # Reduce paging for CLI tools
   environment.variables = {
