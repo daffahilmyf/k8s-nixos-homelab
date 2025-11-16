@@ -11,19 +11,24 @@
     nixpkgs,
     sops-nix,
   } @ inputs: let
-    sharedModules = [
+    baseModules = [
       ./modules/base.nix
       ./modules/networking.nix
       ./modules/packages.nix
-      ./modules/k3s.nix
-      ./modules/node-role.nix
-      ./modules/cluster-bootstrap.nix
       ./modules/sops.nix
       ./modules/cloudflared.nix
       ./modules/git.nix
       ./modules/ssh.nix
       ./modules/guest-agent.nix
     ];
+
+    sharedModules =
+      baseModules
+      ++ [
+        ./modules/k3s.nix
+        ./modules/node-role.nix
+        ./modules/cluster-bootstrap.nix
+      ];
   in {
     nixosConfigurations = {
       k3s-control-1 = nixpkgs.lib.nixosSystem {
@@ -69,14 +74,8 @@
         specialArgs = {inherit inputs;};
 
         modules =
-          [
-            ./modules/base.nix
-            ./modules/networking.nix
-            ./modules/packages.nix
-            ./modules/sops.nix
-            ./modules/git.nix
-            ./modules/ssh.nix
-            ./modules/guest-agent.nix
+          baseModules
+          ++ [
             ./hosts/default.nix
           ];
       };

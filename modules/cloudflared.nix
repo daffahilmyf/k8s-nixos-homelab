@@ -6,13 +6,13 @@
 }: {
   sops.secrets.cloudflared_token = {
     sopsFile = ./../secrets/cloudflared-token.yaml;
-    path = "/etc/cloudflared/token";
+    path = "/var/lib/cloudflared/token";
     owner = "root";
     mode = "0600";
   };
 
   systemd.tmpfiles.rules = [
-    "d /etc/cloudflared 0755 root root -"
+    "d /var/lib/cloudflared 0700 root root -"
   ];
 
   systemd.services.cloudflared = {
@@ -22,7 +22,7 @@
     after = ["network-online.target"];
 
     serviceConfig = {
-      ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel run --token-file /etc/cloudflared/token";
+      ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel run --token-file /var/lib/cloudflared/token";
       Restart = "always";
       RestartSec = 5;
     };
