@@ -63,7 +63,6 @@ in {
       hostName = cfg.hostName;
       domain = lib.mkIf (cfg.domain != null) cfg.domain;
       search = lib.mkIf (cfg.domain != null) [cfg.domain];
-      firewall.enable = lib.mkDefault false;
       useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
       nameservers = lib.mkDefault cfg.nameservers;
       defaultGateway = lib.mkIf (cfg.gateway != null) cfg.gateway;
