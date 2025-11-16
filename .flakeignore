@@ -1,0 +1,27 @@
+# Git metadata
+.git
+.gitignore
+
+# Local temp dirs
+tmp/
+cache/
+
+# Secrets that should NOT enter the Nix store
+keys/
+secrets/*.yaml.dec
+secrets/*.yaml.bak
+secrets/plain-*.yaml
+
+# SOPS internal files
+*.sops.*
+
+# Editor files
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# System dirs (don’t ever include them)
+etc/
+var/
+run/

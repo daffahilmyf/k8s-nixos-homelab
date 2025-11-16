@@ -1,0 +1,24 @@
+# Nix build artifacts
+result
+result-*
+.nix-result
+
+# SOPS decrypted files (never commit!)
+*.sops.*
+*.dec
+*.decrypted
+*.tmp
+
+# NixOS logs and runtime
+*.swp
+*.swo
+*.bak
+
+# Private Age keys (we do NOT store private keys in Git)
+keys/
+**/key.txt
+*.agekey
+
+# Cloudflared runtime files
+/etc/cloudflared/token
+cloudflared/
