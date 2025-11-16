@@ -11,16 +11,32 @@ Lightweight NixOS-based k3s cluster targeting Proxmox VMs. This flake defines on
 | `modules/` | Reusable NixOS modules (base system, networking, packages, node roles, k3s defaults, bootstrap helpers, cloudflared, git config, and sops). |
 | `secrets/` | SOPS-encrypted or placeholder secrets (Cloudflare tunnel token by default). |
 
+## Tooling Needed (installer or dev machine)
+
+Even on the minimal NixOS installer you can pull in the tools required for secrets work:
+
+```bash
+# Spawn a shell that has git, sops, age, and mkpasswd (from whois)
+nix shell nixpkgs#git nixpkgs#sops nixpkgs#age nixpkgs#whois
+```
+
+Stay inside that shell while cloning the repo, generating keys, and editing secrets.
+
 ## Prerequisites
 
 Do **not** run `nixos-rebuild` until every prerequisite is satisfied:
 
 1. **Hardware config** – Replace `hosts/hardware-configuration.nix` with the `nixos-generate-config` output from the VM you are building. Without this the system cannot boot.
-2. **Age key (shared)** – SOPS secrets are decrypted with a single Age identity that must be present on **every** node (control and workers). Copy the same private key to `/var/lib/sops-nix/key.txt` on each host so `sops-nix` can operate (`modules/sops.nix` hardcodes this path). Create the parent directory (`/var/lib/sops-nix`) and restrict permissions (`0700`).
+2. **Age key (shared)** – Generate once, then copy to each host:
+   ```bash
+   install -d -m 700 /var/lib/sops-nix
+   age-keygen -o /var/lib/sops-nix/key.txt
+   ```
+   Keep the private key safe; every node needs the same key at `/var/lib/sops-nix/key.txt` so SOPS can decrypt secrets.
 3. **Cloudflare token** – Update `secrets/cloudflared-token.yaml` with the real tunnel token and re-encrypt via `sops secrets/cloudflared-token.yaml`. `modules/cloudflared.nix` deploys it to `/etc/cloudflared/token` and configures the service.
 4. **Networking** – Verify that each host definition (`hosts/k3s-*.nix`) has the correct `custom.networking.hostName` and `staticIPv4`. The shared networking module assumes interface `ens18`, `/24` prefix, and gateway `192.168.100.1`; adjust the module if your NIC name or topology differs.
 5. **Git identity (optional)** – Populate `custom.git` values per host if you want `/home/<user>/.gitconfig` files provisioned (control plane enables this by default).
-6. **Root password hash** – Edit `secrets/root-password.yaml` with `sops secrets/root-password.yaml` and set `root_password_hash` to the output of `mkpasswd -m sha-512 'your-temp-pass'`. Every host consumes this secret during activation.
+6. **Root password hash** – Edit `secrets/root-password.yaml` with `sops secrets/root-password.yaml` and set `root_password_hash` to the output of `mkpasswd -m sha-512 'your-temp-pass'` (available via `nix shell nixpkgs#whois -c mkpasswd -m sha-512 ...`). Every host consumes this secret during activation.
 7. **SSH keys (recommended post-install)** – Prepare the public keys you plan to enforce and add them via `custom.ssh.authorizedKeys` once the machines are reachable; you can leave this empty for the very first install.
 
 Only after these steps should you proceed to build the system.
@@ -30,7 +46,7 @@ Only after these steps should you proceed to build the system.
 On each VM (booted into the NixOS installer or an existing system):
 
 ```bash
-nix shell nixpkgs#git -c git clone <this-repo> /etc/nixos
+git clone <this-repo> /etc/nixos
 cd /etc/nixos
 nixos-rebuild switch --flake .#k3s-control-1   # or k3s-worker-1 / k3s-worker-2
 ```
