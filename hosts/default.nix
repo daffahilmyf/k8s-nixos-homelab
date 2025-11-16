@@ -1,13 +1,13 @@
-{ lib, ... }:
-
-let
+{lib, ...}: let
   # Allow DEFAULT_STATIC_IPV4 env var (exported before nixos-install) to
   # pre-fill the static IP without editing the file.
   envIPv4 = builtins.getEnv "DEFAULT_STATIC_IPV4";
 
-  staticIPv4 = if envIPv4 != "" then envIPv4 else null;
-in
-{
+  staticIPv4 =
+    if envIPv4 != ""
+    then envIPv4
+    else null;
+in {
   # Generic host template without k3s services.
   imports = [
     ./hardware-configuration.nix

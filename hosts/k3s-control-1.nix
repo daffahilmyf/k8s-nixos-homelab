@@ -1,6 +1,4 @@
-{ ... }:
-
-{
+{...}: {
   # Import hardware configuration for this VM.
   imports = [
     ./hardware-configuration.nix
@@ -30,7 +28,7 @@
   services.openssh = {
     enable = true;
     settings = {
-      PermitRootLogin = "yes";       # temporary: allows root logins
+      PermitRootLogin = "yes"; # temporary: allows root logins
       PasswordAuthentication = true; # temporary: allows password auth
       # After enabling keys above, switch to:
       # PermitRootLogin = "prohibit-password";
