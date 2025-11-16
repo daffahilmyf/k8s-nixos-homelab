@@ -2,6 +2,10 @@
   config,
   lib,
   ...
-}: {
-  services.qemuGuestAgent.enable = lib.mkDefault true;
+}: let
+  hasQemuGuestOption = lib.hasAttrByPath ["services" "qemuGuestAgent"] config;
+in {
+  config = lib.mkIf hasQemuGuestOption {
+    services.qemuGuestAgent.enable = lib.mkDefault true;
+  };
 }
