@@ -29,9 +29,7 @@ in {
     services.k3s.tokenFile = tokenPath;
 
     services.k3s.extraFlags = lib.concatStringsSep "\n" (
-      [
-        "--disable traefik"
-      ]
+      lib.optional isControl "--disable traefik"
       ++ lib.optional isControl "--token-file ${tokenPath}"
       ++ lib.optional isWorker ''
         --server ${config.custom.cluster.apiServer}
