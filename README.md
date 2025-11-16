@@ -65,7 +65,7 @@ Use this when bootstrapping a new VM that shouldn’t run k3s yet:
 5. Run:
    ```bash
    export DEFAULT_STATIC_IPV4=192.168.100.150    # optional
-   nixos-install --flake .#default
+   nixos-install --impure --flake .#default
    ```
    This enables SSH with password login for initial access; harden it post-install.
 
