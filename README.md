@@ -1,15 +1,16 @@
 # NixOS k3s Cluster Flake
 
-Lightweight NixOS-based k3s cluster targeting Proxmox VMs. This flake defines one control-plane and two workers that share a common module stack (packages, networking, k3s, bootstrap helpers, cloudflared, git identity, and sops integration).
+Lightweight NixOS-based k3s cluster targeting Proxmox VMs. The flake defines one control-plane node plus two workers that share a hardened module stack (base system, networking, firewall, shared host mappings, k3s bootstrap helpers, Git/SSH identity, and SOPS integration).
 
 ## Layout
 
 | Path | Purpose |
 | --- | --- |
-| `flake.nix` | Entry point defining shared modules and three `nixosConfigurations`. |
-| `hosts/` | Host-level overrides. Each host imports `hardware-configuration.nix` plus node-specific networking/SSH/git tweaks. |
-| `modules/` | Reusable NixOS modules (base system, networking, packages, node roles, k3s defaults, bootstrap helpers, cloudflared, git config, and sops). |
-| `secrets/` | SOPS-encrypted or placeholder secrets (root hash, Cloudflare token, k3s join token). |
+| `flake.nix` | Entry point defining shared modules and all `nixosConfigurations`. |
+| `hosts/` | Host-level overrides (hardware config import + networking tweaks). |
+| `modules/` | Reusable modules (base, networking, packages, node roles, firewall, `/etc/hosts`, k3s bootstrap, cloudflared, git/ssh, sops, guest agent). |
+| `secrets/` | SOPS-encrypted secrets (root password hash, Cloudflare token, k3s join token). |
+| `.sops.yaml` | Encryption policy referencing your Age public key. |
 
 ## Tooling Needed (installer or dev machine)
 
@@ -33,12 +34,12 @@ Do **not** run `nixos-rebuild` until every prerequisite is satisfied:
    age-keygen -o /var/lib/sops-nix/key.txt
    ```
    Keep the private key safe; every node needs the same key at `/var/lib/sops-nix/key.txt` so SOPS can decrypt secrets.
-3. **Cloudflare token** – Update `secrets/cloudflared-token.yaml` with the real tunnel token and re-encrypt via `sops secrets/cloudflared-token.yaml`. `modules/cloudflared.nix` deploys it to `/etc/cloudflared/token` and configures the service.
-4. **k3s cluster token** – Edit `secrets/k3s-token.yaml` with `sops secrets/k3s-token.yaml` and set `k3s_token` to a strong random string (e.g., `openssl rand -hex 32`). This value is mounted at `/var/lib/rancher/k3s/server/token` on **all** nodes so workers can join without manual file copies.
-5. **Networking** – Adjust each host’s `custom.networking` block (hostname, interface name, static IP, prefix length, gateway, optional domain, nameservers, or `useDHCP`). If you leave `staticIPv4 = null`, DHCP is enabled automatically; otherwise set the static values that match your hypervisor. By default hosts live in `home.arpa`, so FQDNs look like `hostname.home.arpa`.
-6. **Git identity (optional)** – Populate `custom.git` values per host if you want `/home/<user>/.gitconfig` files provisioned (control plane enables this by default).
-7. **Root password hash** – Edit `secrets/root-password.yaml` with `sops secrets/root-password.yaml` and set `root_password_hash` to the output of `mkpasswd -m sha-512 'your-temp-pass'` (available via `nix shell nixpkgs#whois -c mkpasswd -m sha-512 ...`). Every host consumes this secret during activation.
-8. **SSH keys (recommended post-install)** – Prepare the public keys you plan to enforce and add them via `custom.ssh.authorizedKeys`; once you are ready to disable passwords, set `custom.ssh.enforce = true`.
+3. **SOPS policy** – Update `.sops.yaml` with your Age *public* key (`age1...`). This file stays in Git; only the private key lives on hosts.
+4. **Cloudflare token** – Run `sops secrets/cloudflared-token.yaml` and set `cloudflared_token` to the real tunnel token. Only the control plane consumes this secret.
+5. **k3s cluster token** – Run `sops secrets/k3s-token.yaml` and set `k3s_token` to a strong random string (e.g., `openssl rand -hex 32`). Every node reads the token file so workers can join automatically.
+6. **Root password hash** – Run `sops secrets/root-password.yaml` and set `root_password_hash` to the output of `mkpasswd -m sha-512 'temp-pass'`.
+7. **Networking** – Adjust each host’s `custom.networking` block (hostname, interface, static IP, prefix length, gateway, optional domain, nameservers, or `useDHCP`). Shared `/etc/hosts` entries already map the three cluster nodes.
+8. **SSH key + Git identity** – Replace the placeholder SSH public key and Git identity defined in `flake.nix`’s inline `sharedIdentityModule`. All hosts inherit those defaults, so set them once before deploying.
 
 Only after these steps should you proceed to build the system.
 
@@ -67,40 +68,32 @@ Use this when bootstrapping a new VM that shouldn’t run k3s yet:
    export DEFAULT_STATIC_IPV4=192.168.100.150    # optional
    nixos-install --impure --flake .#default
    ```
-   This enables SSH with password login for initial access; harden it post-install.
+   The default host forces `services.k3s.enable = false`, so it never attempts to join the cluster.
 
 ### Hardening after the first boot
 
-Once you log in the first time:
+SSH is key-only by default thanks to the shared identity module. Update `flake.nix` with your real public key before deploying; otherwise you will lock yourself out. If you need per-host overrides (additional users, different keys), extend `custom.ssh` inside the host file.
 
-1. Add your SSH public keys to the host configuration:
-   ```nix
-   custom.ssh = {
-     users = [ "root" ];
-     authorizedKeys = [
-       "ssh-ed25519 AAAAC3Nz... your@laptop"
-     ];
-     enforce = true; # flips SSH to key-only auth
-   };
-   ```
-2. Rebuild (`nixos-rebuild switch --flake .#<host>`) so future logins require keys and password authentication is disabled automatically.
+## Shared Defaults
 
 Each configuration inherits:
 
-- Base system tweaks (`modules/base.nix`): kernel params, EFI bootloader, SSH defaults.
-- Networking (`modules/networking.nix`): static IP/DNS/gateway, firewall disabled by default.
-- Packages (`modules/packages.nix`): CLI tools, kubectl/helm/k9s, cloudflared, sops.
-- Node role detection (`modules/node-role.nix`): sets `services.k3s.role` and adds control-plane tooling.
-- k3s defaults (`modules/k3s.nix`) plus bootstrap helpers (`modules/cluster-bootstrap.nix`) to copy tokens to workers.
-- Cloudflare tunnel service (`modules/cloudflared.nix`) using the SOPS secret.
-- Git identity module (`modules/git.nix`) when `custom.git.enable = true`.
+- **Base system tweaks** (`modules/base.nix`): kernel params, EFI bootloader, and hardened OpenSSH defaults.
+- **Networking** (`modules/networking.nix` + `modules/cluster-hosts.nix`): static IP/DNS/gateway, DHCP toggling, and shared `/etc/hosts` entries for the three nodes.
+- **Packages** (`modules/packages.nix`): baseline CLI tools (curl, wget, git, vim, htop, jq, yq, sops, etc.).
+- **Role detection** (`modules/node-role.nix`): sets `custom.role`, flips k3s between server/agent, and installs kube tooling only on control nodes.
+- **k3s bootstrap** (`modules/k3s.nix` + `modules/cluster-bootstrap.nix`): default server/agent flags, join token wiring, and traefik disablement on the control plane.
+- **Firewall** (`modules/firewall.nix`): enables the firewall with role-aware allowed ports (API/etcd on the control plane, kubelet/VXLAN on workers).
+- **Cloudflare tunnel** (`modules/cloudflared.nix`): only included on `k3s-control-1` so workers stay lean.
+- **Git/SSH identity** (inline module in `flake.nix` + `modules/git.nix`/`modules/ssh.nix`): consistent gitconfig and enforced SSH key auth.
+- **Guest tooling** (`modules/guest-agent.nix`, `modules/sops.nix`, etc.): qemu guest agent, sops-nix integration, shared packages.
 
 ## Operational Notes
 
-- The base module reads the hashed root password from `secrets/root-password.yaml`; host files still enable password auth/root login for bootstrap convenience, so tighten those settings (keys-only auth, disable root login, enable firewall) once the cluster stabilizes.
-- Worker nodes inherit SSH enablement from the base module; once `custom.ssh.enforce = true`, password auth and root-password logins are disabled globally.
-- Workers point to `https://k3s-control-1:6443` by default; override `custom.cluster.apiServer` in any host file if your control-plane endpoint differs.
-- The k3s token now comes from `secrets/k3s-token.yaml`, so there’s no password-based `scp` during bootstrap. Update the secret when rotating cluster credentials.
-- The default host template reads `DEFAULT_STATIC_IPV4` so you can inject the installer’s IP without editing files; the root password hash comes from `secrets/root-password.yaml`, and SSH keys are pushed via `custom.ssh.authorizedKeys`.
+- Replace the placeholder SSH public key in `flake.nix` before any deployment. The shared module enforces key-only SSH for `root`, so a missing key means no access.
+- Worker nodes inherit the same secrets as the control plane (k3s token, root password hash) but do **not** run cloudflared. Their firewall only opens kubelet/VXLAN ports.
+- If your control-plane endpoint changes, override `custom.cluster.apiServer` inside the worker host file. Otherwise they use the shared host mapping (`https://k3s-control-1:6443`).
+- Secrets stay encrypted at rest. After editing with `sops`, commit the ciphertext; the Age private key is only on `/var/lib/sops-nix/key.txt` per host.
+- Keep configurations under version control and update `flake.lock` as needed when bumping `nixpkgs` or `sops-nix`.
 
-Keep configurations under version control and update `flake.lock` as needed when bumping `nixpkgs` or `sops-nix`.
+Treat the repo like production infra: code review changes, run `nixos-rebuild switch --flake .#<host>` after each update, and rotate secrets regularly.
