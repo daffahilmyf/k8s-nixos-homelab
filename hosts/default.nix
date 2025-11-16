@@ -22,11 +22,6 @@ in {
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
-  # Disable k3s and related bootstrap helpers for standalone hosts.
-  services.k3s.enable = false;
-  systemd.services.k3s-bootstrap-token.enable = false;
-  systemd.services.k3s-fetch-token.enable = false;
-
   # Enable SSH with password + root login for initial bootstrap (harden later).
   services.openssh = {
     enable = true;

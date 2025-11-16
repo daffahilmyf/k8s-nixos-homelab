@@ -68,8 +68,13 @@
         specialArgs = {inherit inputs;};
 
         modules =
-          sharedModules
-          ++ [
+          [
+            ./modules/base.nix
+            ./modules/networking.nix
+            ./modules/packages.nix
+            ./modules/sops.nix
+            ./modules/git.nix
+            ./modules/ssh.nix
             ./hosts/default.nix
           ];
       };
