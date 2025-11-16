@@ -1,6 +1,6 @@
 creation_timestamp: "2025-11-17T00:09:34.8788694+07:00"
 keys:
-  - &age_main age1examplepublickeystringreplacewithrealvalue
+  - &age_main age1lvvgrdwqlasvwl7pzv0wfz0swahgwwdveyykzr9899rq29wr4q7skee84d
 
 creation_rules:
   - path_regex: secrets/.*\.yaml$
