@@ -15,7 +15,11 @@ in {
 
   custom.networking = {
     hostName = "nixos-default";
+    interface = "ens18";
     inherit staticIPv4;
+    prefixLength = 24;
+    gateway = "192.168.100.1";
+    nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
   # Disable k3s and related bootstrap helpers for standalone hosts.

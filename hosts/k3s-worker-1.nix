@@ -8,7 +8,11 @@
   # Adjust these to match your Proxmox VM network.
   custom.networking = {
     hostName = "k3s-worker-1";
+    interface = "ens18";
     staticIPv4 = "192.168.100.161";
+    prefixLength = 24;
+    gateway = "192.168.100.1";
+    nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
   # Workers generally do not need Git identity,

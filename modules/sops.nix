@@ -22,4 +22,12 @@
     mode = "0400";
     owner = "root";
   };
+
+  # Shared k3s cluster token used by control plane and workers.
+  sops.secrets.k3s_token = {
+    sopsFile = ./../secrets/k3s-token.yaml;
+    mode = "0400";
+    owner = "root";
+    path = "/var/lib/rancher/k3s/server/token";
+  };
 }

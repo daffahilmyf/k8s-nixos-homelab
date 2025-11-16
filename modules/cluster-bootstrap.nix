@@ -1,54 +1,42 @@
 {
   lib,
   config,
-  pkgs,
   ...
-}: let
-  # Role helpers
+}:
+let
   isControl = config.custom.role == "control-plane";
   isWorker = config.custom.role == "worker";
-
-  # k3s token path
-  tokenFile = "/var/lib/rancher/k3s/server/token";
+  tokenPath = config.sops.secrets.k3s_token.path;
 in {
-  # Control-plane: wait for token to appear
-  systemd.services.k3s-bootstrap-token = lib.mkIf isControl {
-    description = "Ensure k3s server token exists";
-    after = ["k3s.service"];
-    wantedBy = ["multi-user.target"];
-
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c ' \
-        for i in {1..20}; do \
-          if [ -f ${tokenFile} ]; then exit 0; fi; \
-          echo \"Waiting for k3s token...\"; sleep 1; \
-        done; \
-        echo \"Token not found\"; \
-      '";
-    };
+  options.custom.cluster.apiServer = lib.mkOption {
+    type = lib.types.str;
+    default = "https://k3s-control-1:6443";
+    description = "k3s API endpoint workers use to join the cluster.";
   };
 
-  # Worker: fetch token from control-plane
-  systemd.services.k3s-fetch-token = lib.mkIf isWorker {
-    description = "Fetch k3s join token from control node";
-    after = ["network-online.target"];
-    wantedBy = ["multi-user.target"];
+  config = {
+    assertions = [
+      {
+        assertion = tokenPath != null;
+        message = "k3s token secret (secrets/k3s-token.yaml) must be configured.";
+      }
+    ];
 
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${pkgs.bash}/bin/bash -c ' \
-        mkdir -p /var/lib/rancher/k3s/server; \
-        scp -o StrictHostKeyChecking=no \
-          root@k3s-control-1:${tokenFile} \
-          /var/lib/rancher/k3s/server/token; \
-      '";
-    };
+    systemd.tmpfiles.rules = [
+      "d /var/lib/rancher/k3s/server 0700 root root -"
+    ];
+
+    services.k3s.tokenFile = tokenPath;
+
+    services.k3s.extraFlags = lib.concatStringsSep "\n" (
+      [
+        "--disable traefik"
+      ]
+      ++ lib.optional isControl "--token-file ${tokenPath}"
+      ++ lib.optional isWorker ''
+        --server ${config.custom.cluster.apiServer}
+        --token-file ${tokenPath}
+      ''
+    );
   };
-
-  # Worker join args
-  services.k3s.extraFlags = lib.mkIf isWorker ''
-    --server https://k3s-control-1:6443
-    --token-file /var/lib/rancher/k3s/server/token
-  '';
 }
