@@ -24,9 +24,12 @@
     };
   };
 
-  services.openssh.settings = {
-    PermitRootLogin = lib.mkDefault "no";
-    PasswordAuthentication = lib.mkDefault false;
+  services.openssh = {
+    enable = lib.mkDefault true;
+    settings = {
+      PermitRootLogin = lib.mkDefault "no";
+      PasswordAuthentication = lib.mkDefault false;
+    };
   };
 
   # Root password hash is delivered via sops secret (see modules/sops.nix).
