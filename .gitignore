@@ -22,3 +22,4 @@ keys/
 # Cloudflared runtime files
 /etc/cloudflared/token
 cloudflared/
+!*.sops.yaml
