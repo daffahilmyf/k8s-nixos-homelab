@@ -22,6 +22,7 @@
       ./modules/cloudflared.nix
       ./modules/git.nix
       ./modules/ssh.nix
+      ./modules/guest-agent.nix
     ];
   in {
     nixosConfigurations = {
@@ -75,6 +76,7 @@
             ./modules/sops.nix
             ./modules/git.nix
             ./modules/ssh.nix
+            ./modules/guest-agent.nix
             ./hosts/default.nix
           ];
       };
