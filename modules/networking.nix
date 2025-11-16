@@ -38,6 +38,12 @@ in {
       description = "Default gateway (null disables the route).";
     };
 
+    domain = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = "home.arpa";
+      description = "DNS domain appended to the hostname (null disables).";
+    };
+
     nameservers = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = ["1.1.1.1" "8.8.8.8"];
@@ -55,6 +61,8 @@ in {
   config = {
     networking = {
       hostName = cfg.hostName;
+      domain = lib.mkIf (cfg.domain != null) cfg.domain;
+      search = lib.mkIf (cfg.domain != null) [cfg.domain];
       firewall.enable = lib.mkDefault false;
       useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
       nameservers = lib.mkDefault cfg.nameservers;
