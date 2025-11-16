@@ -13,6 +13,9 @@ in {
     ./hardware-configuration.nix
   ];
 
+  # Default build must never start k3s; force it off explicitly.
+  services.k3s.enable = lib.mkForce false;
+
   custom.networking = {
     hostName = "nixos-default";
     interface = "ens18";
@@ -22,31 +25,4 @@ in {
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
-  # Default git identity (adjust per host).
-  custom.git = {
-    enable = true;
-    email = "your_email@example.com";
-    username = "your_username";
-    fullName = "Your Name";
-  };
-
-  # Enable SSH with password + root login for initial bootstrap (harden later).
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "yes";
-      PasswordAuthentication = true;
-      # After enabling keys above, switch to stricter settings:
-      # PermitRootLogin = "prohibit-password";
-      # PasswordAuthentication = false;
-    };
-  };
-
-  # SSH public keys (enable post-install to harden access).
-  # custom.ssh = {
-  #   users = [ "root" ];
-  #   authorizedKeys = [
-  #     "ssh-ed25519 AAAAC3NzaC1exampleKeyGoesHere installer@example"
-  #   ];
-  # };
 }

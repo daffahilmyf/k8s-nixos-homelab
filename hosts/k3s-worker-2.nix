@@ -15,23 +15,4 @@
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
 
-  # Git identity (override with real values or disable if unused).
-  custom.git = {
-    enable = true;
-    email = "your_email@example.com";
-    username = "your_username";
-    fullName = "Your Name";
-  };
-
-  # SSH configuration
-  #
-  # Root login + password auth are enabled only for convenience.
-  # This is NOT recommended for production worker nodes.
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "yes"; # temporary: allows root login
-      PasswordAuthentication = true; # temporary: allow SSH password logins
-    };
-  };
 }

@@ -11,12 +11,29 @@
     nixpkgs,
     sops-nix,
   } @ inputs: let
+    sharedIdentityModule = {lib, ...}: {
+      custom.git = {
+        enable = lib.mkDefault true;
+        email = "your_email@example.com";
+        username = "your_username";
+        fullName = "Your Name";
+      };
+
+      custom.ssh = {
+        users = ["root"];
+        authorizedKeys = [
+          "ssh-ed25519 AAAAB3NzaC1yc2EAAAADAQABAAACAQCplaceholderReplaceMe user@example"
+        ];
+        enforce = true;
+      };
+    };
+
     baseModules = [
+      sharedIdentityModule
       ./modules/base.nix
       ./modules/networking.nix
       ./modules/packages.nix
       ./modules/sops.nix
-      ./modules/cloudflared.nix
       ./modules/git.nix
       ./modules/ssh.nix
       ./modules/firewall.nix

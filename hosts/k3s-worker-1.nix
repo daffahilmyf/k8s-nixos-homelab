@@ -14,25 +14,4 @@
     gateway = "192.168.100.1";
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
-
-  # Git identity (override with real values or disable if unused).
-  custom.git = {
-    enable = true;
-    email = "your_email@example.com";
-    username = "your_username";
-    fullName = "Your Name";
-  };
-
-  # SSH access settings
-  #
-  # Workers typically do NOT require password or root login.
-  # These are enabled only for convenience during setup.
-  # For production, disable password auth and root login.
-  services.openssh = {
-    enable = true;
-    settings = {
-      PermitRootLogin = "yes"; # temporary: allows root login
-      PasswordAuthentication = true; # temporary: password authentication enabled
-    };
-  };
 }
