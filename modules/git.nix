@@ -1,9 +1,41 @@
 {
   lib,
   config,
+  pkgs,
   ...
 }: let
   cfg = config.custom.git;
+  getUserAttr = attr: user: lib.attrByPath ["users" "users" user attr] config null;
+  getUserHome = user: let
+    home = getUserAttr "home" user;
+  in
+    if home != null then home else "/home/${user}";
+  getUserGroup = user: let
+    group = getUserAttr "group" user;
+  in
+    if group != null then group else user;
+  renderGitconfig = user:
+    pkgs.writeText "gitconfig-${user}" ''
+      [user]
+        email = ${cfg.email}
+        name = ${cfg.fullName}
+
+      ${lib.optionalString (cfg.passwordFile != null) ''
+        [credential]
+          helper = "!f() { cat ${cfg.passwordFile}; }; f"
+      ''}
+    '';
+  mkInstallScript = lib.concatStringsSep "\n" (map (user: let
+        home = getUserHome user;
+        group = getUserGroup user;
+        gitconfigFile = renderGitconfig user;
+      in ''
+        if [ -d "${home}" ]; then
+          install -Dm600 ${gitconfigFile} "${home}/.gitconfig"
+          chown ${user}:${group} "${home}/.gitconfig"
+        fi
+      '')
+      cfg.users);
 in {
   # Git module options
   options.custom.git = {
@@ -43,20 +75,9 @@ in {
 
   # Apply gitconfig when enabled
   config = lib.mkIf cfg.enable {
-    users.users = lib.genAttrs cfg.users (_: {
-      files.".gitconfig" = {
-        mode = "0600";
-        text = ''
-          [user]
-            email = ${cfg.email}
-            name = ${cfg.fullName}
-
-          ${lib.optionalString (cfg.passwordFile != null) ''
-            [credential]
-              helper = "!f() { cat ${cfg.passwordFile}; }; f"
-          ''}
-        '';
-      };
-    });
+    system.activationScripts.gitconfigs = {
+      deps = ["users"];
+      text = mkInstallScript;
+    };
   };
 }
