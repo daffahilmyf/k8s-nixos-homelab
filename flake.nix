@@ -15,9 +15,9 @@
       lib,
       config,
       ...
-    }: let
-      placeholderMarker = "placeholderReplaceMe";
-    in {
+    }: {
+      custom.auth.rootPassword = lib.mkDefault "root";
+
       custom.git = {
         enable = lib.mkDefault true;
         email = lib.mkDefault "your_email@example.com";
@@ -27,17 +27,11 @@
 
       custom.ssh = {
         users = lib.mkDefault ["root"];
-        authorizedKeys = lib.mkDefault ["ssh-ed25519 AAAAB3NzaC1yc2EAAAADAQABAAACAQCplaceholderReplaceMe user@example"];
-        enforce = lib.mkDefault true;
+        authorizedKeys = lib.mkDefault [];
+        enforce = lib.mkDefault false;
+        passwordAuthentication = lib.mkDefault true;
+        permitRootLogin = lib.mkDefault "yes";
       };
-
-      assertions = [
-        {
-          assertion =
-            !(lib.any (key: lib.hasInfix placeholderMarker key) config.custom.ssh.authorizedKeys);
-          message = "Replace the placeholder SSH public key in flake.nix (sharedIdentityModule).";
-        }
-      ];
     };
 
     baseModules = [

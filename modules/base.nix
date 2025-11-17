@@ -3,44 +3,63 @@
   pkgs,
   lib,
   ...
-}: {
-  boot = {
-    kernel.sysctl = {
-      "net.bridge.bridge-nf-call-iptables" = 1;
-      "net.ipv4.ip_forward" = 1;
+}: let
+  authCfg = config.custom.auth;
+  rootPasswordSecret = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
+in {
+  options.custom.auth = {
+    rootPassword = lib.mkOption {
+      type = lib.types.nullOr lib.types.str;
+      default = null;
+      description = "Plaintext root password for initial deployments (use only in trusted environments).";
+    };
+  };
+
+  config = {
+    boot = {
+      kernel.sysctl = {
+        "net.bridge.bridge-nf-call-iptables" = 1;
+        "net.ipv4.ip_forward" = 1;
+      };
+
+      kernelModules = ["br_netfilter"];
+
+      kernelParams = [
+        "cgroup_enable=cpuset"
+        "cgroup_enable=memory"
+        "cgroup_memory=1"
+      ];
+
+      loader = {
+        systemd-boot.enable = true;
+        efi.canTouchEfiVariables = true;
+      };
     };
 
-    kernelModules = ["br_netfilter"];
+    services.openssh = {
+      enable = lib.mkDefault true;
+      settings = {
+        PermitRootLogin = lib.mkDefault "no";
+        PasswordAuthentication = lib.mkDefault false;
+      };
+    };
 
-    kernelParams = [
-      "cgroup_enable=cpuset"
-      "cgroup_enable=memory"
-      "cgroup_memory=1"
+    users.users.root = lib.mkMerge [
+      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecret != null) {
+        hashedPasswordFile = rootPasswordSecret;
+      })
+      (lib.mkIf (authCfg.rootPassword != null) {
+        initialPassword = authCfg.rootPassword;
+      })
     ];
 
-    loader = {
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
-    };
+    assertions = [
+      {
+        assertion = (authCfg.rootPassword != null) || (rootPasswordSecret != null);
+        message = "Provide custom.auth.rootPassword or define the sops secret root_password_hash (see secrets/root-password.yaml).";
+      }
+    ];
+
+    system.stateVersion = "25.05";
   };
-
-  services.openssh = {
-    enable = lib.mkDefault true;
-    settings = {
-      PermitRootLogin = lib.mkDefault "no";
-      PasswordAuthentication = lib.mkDefault false;
-    };
-  };
-
-  # Root password hash is delivered via sops secret (see modules/sops.nix).
-  users.users.root.hashedPasswordFile = config.sops.secrets.root_password_hash.path;
-
-  assertions = [
-    {
-      assertion = config.sops.secrets.root_password_hash.path != null;
-      message = "sops secret root_password_hash must be defined (see secrets/root-password.yaml).";
-    }
-  ];
-
-  system.stateVersion = "25.05";
 }

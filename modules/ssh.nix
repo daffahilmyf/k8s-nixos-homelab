@@ -10,7 +10,7 @@ in {
     authorizedKeys = lib.mkOption {
       type = lib.types.listOf lib.types.str;
       default = [];
-      description = "Public keys pushed into each listed user’s authorized_keys.";
+      description = "Public keys pushed into each listed user's authorized_keys.";
     };
 
     users = lib.mkOption {
@@ -23,6 +23,18 @@ in {
       type = lib.types.bool;
       default = false;
       description = "When true, disable password auth/root login (requires authorizedKeys).";
+    };
+
+    passwordAuthentication = lib.mkOption {
+      type = lib.types.nullOr lib.types.bool;
+      default = null;
+      description = "Optional override for services.openssh.settings.PasswordAuthentication.";
+    };
+
+    permitRootLogin = lib.mkOption {
+      type = lib.types.nullOr (lib.types.enum ["no" "without-password" "prohibit-password" "yes"]);
+      default = null;
+      description = "Optional override for services.openssh.settings.PermitRootLogin.";
     };
   };
 
@@ -45,6 +57,17 @@ in {
         PermitRootLogin = lib.mkForce "prohibit-password";
         PasswordAuthentication = lib.mkForce false;
       };
+    })
+
+    (lib.mkIf (!cfg.enforce && (cfg.passwordAuthentication != null || cfg.permitRootLogin != null)) {
+      services.openssh.settings = lib.mkMerge [
+        (lib.mkIf (cfg.passwordAuthentication != null) {
+          PasswordAuthentication = lib.mkForce cfg.passwordAuthentication;
+        })
+        (lib.mkIf (cfg.permitRootLogin != null) {
+          PermitRootLogin = lib.mkForce cfg.permitRootLogin;
+        })
+      ];
     })
   ];
 }

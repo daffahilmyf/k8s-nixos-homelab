@@ -19,7 +19,9 @@
     enable = true;
     description = "Cloudflare Tunnel";
     wantedBy = ["multi-user.target"];
-    after = ["network-online.target"];
+    wants = ["network-online.target" "sops-install-secrets.service"];
+    after = ["network-online.target" "sops-install-secrets.service"];
+    requires = ["sops-install-secrets.service"];
 
     serviceConfig = {
       ExecStart = "${pkgs.cloudflared}/bin/cloudflared tunnel run --token-file /var/lib/cloudflared/token";

@@ -13,25 +13,40 @@
     if user == "root"
     then "root"
     else user;
-  renderGitconfig = user:
+  credentialBlock = home:
+    let
+      includeHelper = cfg.passwordFile != null;
+      includeUsername = (cfg.username or "") != "";
+    in
+      lib.optionalString (includeHelper || includeUsername) ''
+        [credential]
+          ${lib.optionalString includeHelper "helper = store --file ${home}/.git-credentials"}
+          ${lib.optionalString includeUsername "username = ${cfg.username}"}
+      '';
+  renderGitconfig = user: home:
     pkgs.writeText "gitconfig-${user}" ''
       [user]
         email = ${cfg.email}
         name = ${cfg.fullName}
 
-      ${lib.optionalString (cfg.passwordFile != null) ''
-        [credential]
-          helper = "!f() { cat ${cfg.passwordFile}; }; f"
-      ''}
+      ${credentialBlock home}
     '';
   mkInstallScript = lib.concatStringsSep "\n" (map (user: let
         home = getUserHome user;
         group = getUserGroup user;
-        gitconfigFile = renderGitconfig user;
+        gitconfigFile = renderGitconfig user home;
+        passwordCopy =
+          lib.optionalString (cfg.passwordFile != null) ''
+            install -Dm600 ${cfg.passwordFile} "${home}/.git-credentials"
+            chown ${user}:${group} "${home}/.git-credentials"
+          '';
       in ''
-        if [ -d "${home}" ]; then
+        if id "${user}" >/dev/null 2>&1 && [ -d "${home}" ]; then
           install -Dm600 ${gitconfigFile} "${home}/.gitconfig"
           chown ${user}:${group} "${home}/.gitconfig"
+          ${passwordCopy}
+        else
+          echo "custom.git: skipping ${user} because the account or home directory is missing" >&2
         fi
       '')
       cfg.users);
@@ -74,6 +89,12 @@ in {
 
   # Apply gitconfig when enabled
   config = lib.mkIf cfg.enable {
+    assertions = map (user: {
+        assertion = lib.hasAttr user config.users.users;
+        message = "custom.git.users contains '${user}' but no matching users.users.${user} definition exists.";
+      })
+      cfg.users;
+
     system.activationScripts.gitconfigs = {
       deps = ["users"];
       text = mkInstallScript;
