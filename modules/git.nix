@@ -5,15 +5,14 @@
   ...
 }: let
   cfg = config.custom.git;
-  getUserAttr = attr: user: lib.attrByPath ["users" "users" user attr] config null;
-  getUserHome = user: let
-    home = getUserAttr "home" user;
-  in
-    if home != null then home else "/home/${user}";
-  getUserGroup = user: let
-    group = getUserAttr "group" user;
-  in
-    if group != null then group else user;
+  getUserHome = user:
+    if user == "root"
+    then "/root"
+    else "/home/${user}";
+  getUserGroup = user:
+    if user == "root"
+    then "root"
+    else user;
   renderGitconfig = user:
     pkgs.writeText "gitconfig-${user}" ''
       [user]
