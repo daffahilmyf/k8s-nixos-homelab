@@ -1,11 +1,9 @@
 {
   lib,
   config,
-  pkgs,
   ...
 }: let
   cfg = config.custom.git;
-  getUserHome = user: lib.attrByPath ["users" "users" user "home"] config "/home/${user}";
 in {
   # Git module options
   options.custom.git = {
@@ -30,10 +28,10 @@ in {
       description = "Git username.";
     };
 
-    password = lib.mkOption {
+    passwordFile = lib.mkOption {
       type = lib.types.nullOr lib.types.str;
       default = null;
-      description = "Optional PAT or password (plain text).";
+      description = "Path to a secret file that holds a Git PAT/password (e.g. config.sops.secrets.<name>.path).";
     };
 
     users = lib.mkOption {
@@ -45,26 +43,20 @@ in {
 
   # Apply gitconfig when enabled
   config = lib.mkIf cfg.enable {
-    environment.etc = builtins.listToAttrs (map (user: let
-        home = getUserHome user;
-      in {
-        name = "gitconfig-${user}";
-        value = {
-          mode = "0600";
-          target = "${home}/.gitconfig";
-          text = ''
-            [user]
-              email = ${cfg.email}
-              name = ${cfg.fullName}
+    users.users = lib.genAttrs cfg.users (_: {
+      files.".gitconfig" = {
+        mode = "0600";
+        text = ''
+          [user]
+            email = ${cfg.email}
+            name = ${cfg.fullName}
 
-            ${lib.optionalString (cfg.password != null) ''
-              [credential]
-                helper = store
-                password = ${cfg.password}
-            ''}
-          '';
-        };
-      })
-      cfg.users);
+          ${lib.optionalString (cfg.passwordFile != null) ''
+            [credential]
+              helper = "!f() { cat ${cfg.passwordFile}; }; f"
+          ''}
+        '';
+      };
+    });
   };
 }
