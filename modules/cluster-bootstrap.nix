@@ -7,6 +7,9 @@ let
   isControl = config.custom.role == "control-plane";
   isWorker = config.custom.role == "worker";
   tokenPath = config.sops.secrets.k3s_token.path;
+  sopsServiceName = "sops-nix";
+  hasSopsService = builtins.hasAttr sopsServiceName config.systemd.services;
+  sopsDeps = lib.optionals hasSopsService ["${sopsServiceName}.service"];
 in {
   options.custom.cluster.apiServer = lib.mkOption {
     type = lib.types.str;
@@ -36,5 +39,11 @@ in {
         --token-file ${tokenPath}
       ''
     );
+
+    systemd.services.k3s = {
+      wants = ["network-online.target"] ++ sopsDeps;
+      after = ["network-online.target"] ++ sopsDeps;
+      requires = sopsDeps;
+    };
   };
 }

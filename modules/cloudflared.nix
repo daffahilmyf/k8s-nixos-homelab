@@ -5,7 +5,8 @@
   ...
 }: let
   sopsUnit = "sops-nix.service";
-  sopsDeps = lib.optionals (config.systemd.services ? "sops-nix") [sopsUnit];
+  hasSopsService = builtins.hasAttr "sops-nix" config.systemd.services;
+  sopsDeps = lib.optionals hasSopsService [sopsUnit];
 in {
   sops.secrets.cloudflared_token = {
     sopsFile = ./../secrets/cloudflared-token.yaml;
