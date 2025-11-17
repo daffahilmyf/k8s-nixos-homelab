@@ -19,19 +19,23 @@ in {
     description = "Kubernetes node role";
   };
 
-  # k3s role binding
-  config.services.k3s = {
-    role =
-      if config.custom.role == "control-plane"
-      then "server"
-      else "agent";
-    clusterInit = lib.mkIf (config.custom.role == "control-plane") true;
-  };
+  config = lib.mkMerge [
+    {
+      services.k3s = {
+        role =
+          if config.custom.role == "control-plane"
+          then "server"
+          else "agent";
+        clusterInit = lib.mkIf (config.custom.role == "control-plane") true;
+      };
+    }
 
-  # Control-plane tools
-  config.environment.systemPackages = lib.mkIf (config.custom.role == "control-plane") [
-    pkgs.kubectl
-    pkgs.kubernetes-helm
-    pkgs.k9s
+    (lib.mkIf (config.custom.role == "control-plane") {
+      environment.systemPackages = [
+        pkgs.kubectl
+        pkgs.kubernetes-helm
+        pkgs.k9s
+      ];
+    })
   ];
 }

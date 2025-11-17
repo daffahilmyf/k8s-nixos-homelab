@@ -58,31 +58,39 @@ in {
   };
 
   # Apply settings
-  config = {
-    networking = {
-      hostName = cfg.hostName;
-      domain = lib.mkIf (cfg.domain != null) cfg.domain;
-      search = lib.mkIf (cfg.domain != null) [cfg.domain];
-      useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
-      nameservers = lib.mkDefault cfg.nameservers;
-      defaultGateway = lib.mkIf (cfg.gateway != null) cfg.gateway;
+  config = lib.mkMerge [
+    {
+      networking = {
+        hostName = cfg.hostName;
+        useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
+        nameservers = lib.mkDefault cfg.nameservers;
 
-      interfaces =
-        lib.mkIf (cfg.interface != null) {
-          "${cfg.interface}" =
-            {
-              useDHCP = if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP;
-            }
-            // lib.optionalAttrs (cfg.staticIPv4 != null) {
-              useDHCP = false;
-              ipv4.addresses = [
-                {
-                  address = cfg.staticIPv4;
-                  prefixLength = cfg.prefixLength;
-                }
-              ];
-            };
-        };
-    };
-  };
+        interfaces =
+          lib.mkIf (cfg.interface != null) {
+            "${cfg.interface}" =
+              {
+                useDHCP = if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP;
+              }
+              // lib.optionalAttrs (cfg.staticIPv4 != null) {
+                useDHCP = false;
+                ipv4.addresses = [
+                  {
+                    address = cfg.staticIPv4;
+                    prefixLength = cfg.prefixLength;
+                  }
+                ];
+              };
+          };
+      };
+    }
+
+    (lib.mkIf (cfg.domain != null) {
+      networking.domain = cfg.domain;
+      networking.search = [cfg.domain];
+    })
+
+    (lib.mkIf (cfg.gateway != null) {
+      networking.defaultGateway = cfg.gateway;
+    })
+  ];
 }

@@ -11,7 +11,13 @@
     nixpkgs,
     sops-nix,
   } @ inputs: let
-    sharedIdentityModule = {lib, ...}: {
+    sharedIdentityModule = {
+      lib,
+      config,
+      ...
+    }: let
+      placeholderKey = "ssh-ed25519 AAAAB3NzaC1yc2EAAAADAQABAAACAQCplaceholderReplaceMe user@example";
+    in {
       custom.git = {
         enable = lib.mkDefault true;
         email = "your_email@example.com";
@@ -21,11 +27,16 @@
 
       custom.ssh = {
         users = ["root"];
-        authorizedKeys = [
-          "ssh-ed25519 AAAAB3NzaC1yc2EAAAADAQABAAACAQCplaceholderReplaceMe user@example"
-        ];
+        authorizedKeys = [placeholderKey];
         enforce = true;
       };
+
+      assertions = [
+        {
+          assertion = !(builtins.elem placeholderKey config.custom.ssh.authorizedKeys);
+          message = "Replace the placeholder SSH public key in flake.nix (sharedIdentityModule).";
+        }
+      ];
     };
 
     baseModules = [

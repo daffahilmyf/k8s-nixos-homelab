@@ -5,6 +5,7 @@
   ...
 }: let
   cfg = config.custom.git;
+  getUserHome = user: lib.attrByPath ["users" "users" user "home"] config "/home/${user}";
 in {
   # Git module options
   options.custom.git = {
@@ -44,15 +45,17 @@ in {
 
   # Apply gitconfig when enabled
   config = lib.mkIf cfg.enable {
-    environment.etc = builtins.listToAttrs (map (user: {
+    environment.etc = builtins.listToAttrs (map (user: let
+        home = getUserHome user;
+      in {
         name = "gitconfig-${user}";
         value = {
-          mode = "0644";
-          target = "/home/${user}/.gitconfig";
+          mode = "0600";
+          target = "${home}/.gitconfig";
           text = ''
             [user]
               email = ${cfg.email}
-              name = ${cfg.username}
+              name = ${cfg.fullName}
 
             ${lib.optionalString (cfg.password != null) ''
               [credential]
