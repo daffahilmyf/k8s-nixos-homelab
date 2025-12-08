@@ -50,6 +50,7 @@
         fi
       '')
       cfg.users);
+  githubTokenPath = lib.attrByPath ["sops" "secrets" "github_token" "path"] config null;
 in {
   # Git module options
   options.custom.git = {
@@ -88,16 +89,22 @@ in {
   };
 
   # Apply gitconfig when enabled
-  config = lib.mkIf cfg.enable {
-    assertions = map (user: {
+  config = lib.mkMerge [
+    (lib.mkIf (githubTokenPath != null) {
+      custom.git.passwordFile = lib.mkDefault githubTokenPath;
+    })
+
+    (lib.mkIf cfg.enable {
+      assertions = map (user: {
         assertion = lib.hasAttr user config.users.users;
         message = "custom.git.users contains '${user}' but no matching users.users.${user} definition exists.";
       })
       cfg.users;
 
-    system.activationScripts.gitconfigs = {
-      deps = ["users"];
-      text = mkInstallScript;
-    };
-  };
+      system.activationScripts.gitconfigs = {
+        deps = ["users"];
+        text = mkInstallScript;
+      };
+    })
+  ];
 }

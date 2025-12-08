@@ -60,6 +60,15 @@ in {
   # Apply settings
   config = lib.mkMerge [
     {
+      assertions = [
+        {
+          assertion = (cfg.useDHCP != false) || (cfg.staticIPv4 != null);
+          message = "custom.networking.staticIPv4 must be set when custom.networking.useDHCP is explicitly false.";
+        }
+      ];
+    }
+
+    {
       networking = {
         hostName = cfg.hostName;
         useDHCP = lib.mkForce (if cfg.useDHCP == null then cfg.staticIPv4 == null else cfg.useDHCP);
