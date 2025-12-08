@@ -33,8 +33,9 @@
     };
 
     baseModules = [
-      sharedIdentityModule
-      ./modules/base.nix
+    sharedIdentityModule
+    ./modules/sops.nix
+    ./modules/base.nix
       ./modules/networking.nix
       ./modules/packages.nix
       ./modules/kustomize.nix
