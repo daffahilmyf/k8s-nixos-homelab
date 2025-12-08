@@ -25,7 +25,6 @@ in {
     sopsFile = ./../secrets/root-password.yaml;
     mode = "0400";
     owner = "root";
-    path = "/var/lib/sops-nix/root-password-hash";
   };
 
   # Shared k3s cluster token used by control plane and workers.
