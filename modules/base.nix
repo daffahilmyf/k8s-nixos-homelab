@@ -5,23 +5,7 @@
   ...
 }: let
   authCfg = config.custom.auth;
-  rootPasswordSecret = lib.attrByPath ["sops" "secrets" "root_password_hash"] config null;
-  rawRootPasswordValue =
-    if rootPasswordSecret != null && builtins.isAttrs rootPasswordSecret && builtins.hasAttr "value" rootPasswordSecret
-    then rootPasswordSecret.value
-    else null;
-  resolvedRootPasswordValue =
-    if rawRootPasswordValue == null
-    then null
-    else if lib.isString rawRootPasswordValue
-    then rawRootPasswordValue
-    else if builtins.isAttrs rawRootPasswordValue && builtins.hasAttr "root_password_hash" rawRootPasswordValue
-    then rawRootPasswordValue.root_password_hash
-    else null;
-  rootPasswordHash =
-    if lib.isString resolvedRootPasswordValue
-    then resolvedRootPasswordValue
-    else null;
+  rootPasswordSecretPath = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
 in {
   options.custom.auth = {
     rootPassword = lib.mkOption {
@@ -61,8 +45,8 @@ in {
     };
 
     users.users.root = lib.mkMerge [
-      (lib.mkIf (authCfg.rootPassword == null && rootPasswordHash != null) {
-        hashedPassword = rootPasswordHash;
+      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecretPath != null) {
+        hashedPasswordFile = rootPasswordSecretPath;
       })
       (lib.mkIf (authCfg.rootPassword != null) {
         initialPassword = authCfg.rootPassword;
@@ -71,7 +55,7 @@ in {
 
     assertions = [
       {
-        assertion = (authCfg.rootPassword != null) || (rootPasswordHash != null);
+        assertion = (authCfg.rootPassword != null) || (rootPasswordSecretPath != null);
         message = "Provide custom.auth.rootPassword or define the sops secret root_password_hash (see secrets/root-password.yaml).";
       }
     ];
