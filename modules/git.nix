@@ -91,7 +91,7 @@ in {
   # Apply gitconfig when enabled
   config = lib.mkMerge [
     (lib.mkIf (githubTokenPath != null) {
-      custom.git.passwordFile = lib.mkDefault githubTokenPath;
+      custom.git.passwordFile = githubTokenPath;
     })
 
     (lib.mkIf cfg.enable {
