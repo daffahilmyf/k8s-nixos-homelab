@@ -21,7 +21,6 @@
       custom.git = {
         enable = lib.mkDefault true;
         email = lib.mkDefault "daffahilmanafrizal@gmail.com";
-        username = lib.mkDefault "daffahilmyf";
         fullName = lib.mkDefault "Daffa Hilmy Fadhlurrohman";
       };
 
