@@ -20,14 +20,16 @@
 
       custom.git = {
         enable = lib.mkDefault true;
-        email = lib.mkDefault "your_email@example.com";
-        username = lib.mkDefault "your_username";
-        fullName = lib.mkDefault "Your Name";
+        email = lib.mkDefault "daffahilmanafrizal@gmail.com";
+        username = lib.mkDefault "daffahilmyf";
+        fullName = lib.mkDefault "Daffa Hilmy Fadhlurrohman";
       };
 
       custom.ssh = {
         users = lib.mkDefault ["root"];
-        authorizedKeys = lib.mkDefault [];
+        authorizedKeys = lib.mkDefault [
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBFnUyRhULGR1yGE1BseKum7xPxWBlo8JcEP39qVnGm9 daffahilmanafrizal@gmail.com"
+        ];
         enforce = lib.mkDefault false;
         passwordAuthentication = lib.mkDefault true;
         permitRootLogin = lib.mkDefault "yes";
