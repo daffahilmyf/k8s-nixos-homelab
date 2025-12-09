@@ -65,7 +65,7 @@ in {
       serviceConfig = {
         Type = "oneshot";
         Environment = "KUBECONFIG=/etc/rancher/k3s/k3s.yaml";
-        ExecStart = "${deployScript}";
+        ExecStart = "${deployScript}/bin/kustomize-deploy";
       };
     };
   };
