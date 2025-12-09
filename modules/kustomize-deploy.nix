@@ -20,6 +20,14 @@
     kustomize build "${path}" | kubectl apply -f -
     ${waitScript}
   '') cfg.overlays;
+
+  deployScript = pkgs.writeScriptBin "kustomize-deploy" ''
+    set -euo pipefail
+    until kubectl get --raw=/readyz >/dev/null 2>&1; do
+      sleep 1
+    done
+    ${renderOverlayScript}
+  '';
 in {
   options.custom.kustomizeDeploy = {
     enable = lib.mkOption {
@@ -57,7 +65,7 @@ in {
       serviceConfig = {
         Type = "oneshot";
         Environment = "KUBECONFIG=/etc/rancher/k3s/k3s.yaml";
-        ExecStart = "${pkgs.bash}/bin/bash -c ''\n          set -euo pipefail\n          until kubectl get --raw=/readyz >/dev/null 2>&1; do\n            sleep 1\n          done\n          ${renderOverlayScript}\n        ''";
+        ExecStart = "${deployScript}";
       };
     };
   };
