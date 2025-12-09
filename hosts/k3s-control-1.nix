@@ -14,6 +14,7 @@
     gateway = "192.168.100.1";
     nameservers = ["1.1.1.1" "8.8.8.8"];
   };
+  custom.role = "control-plane";
 
   # Export kubeconfig path so kubectl and other tools can find it.
   environment.variables = {
