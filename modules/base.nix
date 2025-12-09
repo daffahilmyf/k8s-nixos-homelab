@@ -6,7 +6,10 @@
 }: let
   authCfg = config.custom.auth;
   rootPasswordSecretPath = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
-  rootPasswordSecretPathStr = if rootPasswordSecretPath == null then null else lib.toString rootPasswordSecretPath;
+  rootPasswordSecretPathStr =
+    if rootPasswordSecretPath == null
+    then null
+    else builtins.toString rootPasswordSecretPath;
 in {
   options.custom.auth = {
     rootPassword = lib.mkOption {
