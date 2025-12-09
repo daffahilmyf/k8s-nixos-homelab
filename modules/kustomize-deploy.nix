@@ -52,6 +52,7 @@ in {
       description = "Apply Kubernetes kustomize overlays after the control plane is ready.";
       wants = [ "k3s.service" ];
       after = [ "k3s.service" ];
+      wantedBy = [ "multi-user.target" ];
       serviceConfig = {
         Type = "oneshot";
         Environment = "KUBECONFIG=/etc/rancher/k3s/k3s.yaml";
@@ -63,7 +64,6 @@ in {
           ${renderOverlayScript}
         '';
       };
-      install.wantedBy = [ "multi-user.target" ];
     };
   };
 }
