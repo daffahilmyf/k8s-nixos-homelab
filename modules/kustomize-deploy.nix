@@ -49,9 +49,11 @@ in {
     custom.kustomize.enable = lib.mkForce true;
 
     system.activationScripts.kustomizeDeploy = {
-      deps = ["k3s.service"];
       text = ''
         set -euo pipefail
+        until systemctl is-active --quiet k3s.service >/dev/null 2>&1; do
+          sleep 1
+        done
         ${renderOverlayScript}
       '';
     };
