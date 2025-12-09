@@ -34,13 +34,12 @@
 
     baseModules = [
     sharedIdentityModule
-    ./modules/sops.nix
-    ./modules/base.nix
+      ./modules/sops.nix
+      ./modules/base.nix
       ./modules/networking.nix
       ./modules/packages.nix
       ./modules/kustomize.nix
       ./modules/kustomize-deploy.nix
-      ./modules/sops.nix
       ./modules/git.nix
       ./modules/ssh.nix
       ./modules/firewall.nix

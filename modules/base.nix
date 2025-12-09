@@ -7,7 +7,7 @@
   authCfg = config.custom.auth;
   rootPasswordSecret = lib.attrByPath ["sops" "secrets" "root_password_hash"] config null;
   rootPasswordHash =
-    if rootPasswordSecret != null
+    if rootPasswordSecret != null && builtins.isAttrs rootPasswordSecret && builtins.hasAttr "value" rootPasswordSecret
     then rootPasswordSecret.value
     else null;
 in {
