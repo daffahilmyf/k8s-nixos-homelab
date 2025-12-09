@@ -1,4 +1,5 @@
 {
+  pkgs,
   lib,
   config,
   ...
@@ -56,13 +57,7 @@ in {
       serviceConfig = {
         Type = "oneshot";
         Environment = "KUBECONFIG=/etc/rancher/k3s/k3s.yaml";
-        ExecStart = ''
-          set -euo pipefail
-          until kubectl get --raw=/readyz >/dev/null 2>&1; do
-            sleep 1
-          done
-          ${renderOverlayScript}
-        '';
+        ExecStart = "${pkgs.bash}/bin/bash -c ''\n          set -euo pipefail\n          until kubectl get --raw=/readyz >/dev/null 2>&1; do\n            sleep 1\n          done\n          ${renderOverlayScript}\n        ''";
       };
     };
   };
