@@ -16,6 +16,8 @@
       config,
       ...
     }: {
+      custom.auth.rootPassword = lib.mkDefault "root";
+
       custom.git = {
         enable = lib.mkDefault true;
         email = lib.mkDefault "your_email@example.com";
@@ -27,19 +29,17 @@
         users = lib.mkDefault ["root"];
         authorizedKeys = lib.mkDefault [];
         enforce = lib.mkDefault false;
-        passwordAuthentication = lib.mkDefault false;
-        permitRootLogin = lib.mkDefault "prohibit-password";
+        passwordAuthentication = lib.mkDefault true;
+        permitRootLogin = lib.mkDefault "yes";
       };
     };
 
     baseModules = [
-    sharedIdentityModule
-      ./modules/sops.nix
+      sharedIdentityModule
       ./modules/base.nix
       ./modules/networking.nix
       ./modules/packages.nix
-      ./modules/kustomize.nix
-      ./modules/kustomize-deploy.nix
+      ./modules/sops.nix
       ./modules/git.nix
       ./modules/ssh.nix
       ./modules/firewall.nix

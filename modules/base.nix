@@ -5,11 +5,7 @@
   ...
 }: let
   authCfg = config.custom.auth;
-  rootPasswordSecretPath = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
-  rootPasswordSecretPathStr =
-    if rootPasswordSecretPath == null
-    then null
-    else builtins.toString rootPasswordSecretPath;
+  rootPasswordSecret = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
 in {
   options.custom.auth = {
     rootPassword = lib.mkOption {
@@ -49,8 +45,8 @@ in {
     };
 
     users.users.root = lib.mkMerge [
-      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecretPathStr != null) {
-        hashedPasswordFile = rootPasswordSecretPathStr;
+      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecret != null) {
+        hashedPasswordFile = rootPasswordSecret;
       })
       (lib.mkIf (authCfg.rootPassword != null) {
         initialPassword = authCfg.rootPassword;
@@ -59,7 +55,7 @@ in {
 
     assertions = [
       {
-        assertion = (authCfg.rootPassword != null) || (rootPasswordSecretPath != null);
+        assertion = (authCfg.rootPassword != null) || (rootPasswordSecret != null);
         message = "Provide custom.auth.rootPassword or define the sops secret root_password_hash (see secrets/root-password.yaml).";
       }
     ];
