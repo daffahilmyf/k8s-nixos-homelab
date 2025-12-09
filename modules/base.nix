@@ -6,6 +6,7 @@
 }: let
   authCfg = config.custom.auth;
   rootPasswordSecretPath = lib.attrByPath ["sops" "secrets" "root_password_hash" "path"] config null;
+  rootPasswordSecretPathStr = if rootPasswordSecretPath == null then null else lib.toString rootPasswordSecretPath;
 in {
   options.custom.auth = {
     rootPassword = lib.mkOption {
@@ -45,8 +46,8 @@ in {
     };
 
     users.users.root = lib.mkMerge [
-      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecretPath != null) {
-        hashedPasswordFile = rootPasswordSecretPath;
+      (lib.mkIf (authCfg.rootPassword == null && rootPasswordSecretPathStr != null) {
+        hashedPasswordFile = rootPasswordSecretPathStr;
       })
       (lib.mkIf (authCfg.rootPassword != null) {
         initialPassword = authCfg.rootPassword;
