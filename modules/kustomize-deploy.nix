@@ -48,14 +48,22 @@ in {
 
     custom.kustomize.enable = lib.mkForce true;
 
-    system.activationScripts.kustomizeDeploy = {
-      text = ''
-        set -euo pipefail
-        until systemctl is-active --quiet k3s.service >/dev/null 2>&1; do
-          sleep 1
-        done
-        ${renderOverlayScript}
-      '';
+    systemd.services.kustomizeDeploy = {
+      description = "Apply Kubernetes kustomize overlays after the control plane is ready.";
+      wants = [ "k3s.service" ];
+      after = [ "k3s.service" ];
+      serviceConfig = {
+        Type = "oneshot";
+        Environment = "KUBECONFIG=/etc/rancher/k3s/k3s.yaml";
+        ExecStart = ''
+          set -euo pipefail
+          until kubectl get --raw=/readyz >/dev/null 2>&1; do
+            sleep 1
+          done
+          ${renderOverlayScript}
+        '';
+      };
+      install.wantedBy = [ "multi-user.target" ];
     };
   };
 }
