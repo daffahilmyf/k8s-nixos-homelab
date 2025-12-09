@@ -22,6 +22,7 @@
   '') cfg.overlays;
 
   deployScript = pkgs.writeScriptBin "kustomize-deploy" ''
+    #!${pkgs.bash}/bin/bash
     set -euo pipefail
     until kubectl get --raw=/readyz >/dev/null 2>&1; do
       sleep 1
