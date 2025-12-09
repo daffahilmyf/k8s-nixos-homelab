@@ -28,12 +28,12 @@ Stay inside that shell while cloning the repo, generating keys, and editing secr
 Do **not** run `nixos-rebuild` until every prerequisite is satisfied:
 
 1. **Hardware config** – Replace `hosts/hardware-configuration.nix` with the `nixos-generate-config` output from the VM you are building. Without this the system cannot boot.
-2. **Age key (shared)** – Generate once, then copy to each host:
+2. **Age key (shared)** – Generate once, then copy to each host before running any NixOS build/installation step:
    ```bash
    install -d -m 700 /var/lib/sops-nix
    age-keygen -o /var/lib/sops-nix/key.txt
    ```
-   Keep the private key safe; every node needs the same key at `/var/lib/sops-nix/key.txt` so SOPS can decrypt secrets.
+   Keep the private key safe; every node needs the same key at `/var/lib/sops-nix/key.txt` so SOPS can decrypt secrets. The installer runs `sops-install-secrets` during activation, so `/var/lib/sops-nix/key.txt` must already exist on the target filesystem when `nixos-install` or `nixos-rebuild` runs.
 3. **SOPS policy** – Update `.sops.yaml` with your Age *public* key (`age1...`). This file stays in Git; only the private key lives on hosts.
 4. **Cloudflare token** – Run `sops secrets/cloudflared-token.yaml` and set `cloudflared_token` to the real tunnel token. Only the control plane consumes this secret.
 5. **k3s cluster token** – Run `sops secrets/k3s-token.yaml` and set `k3s_token` to a strong random string (e.g., `openssl rand -hex 32`). Every node reads the token file so workers can join automatically.
@@ -69,6 +69,7 @@ Use this when bootstrapping a new VM that shouldn’t run k3s yet:
    nixos-install --impure --flake .#default
    ```
    The default host forces `services.k3s.enable = false`, so it never attempts to join the cluster.
+   **Prep:** copy `/var/lib/sops-nix/key.txt` into the installer environment before invoking `nixos-install` so the `setupSecrets` activation snippet can decrypt the secrets bundle.
 
 ### Hardening after the first boot
 

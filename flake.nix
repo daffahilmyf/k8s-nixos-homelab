@@ -46,6 +46,8 @@
       ./modules/firewall.nix
       ./modules/guest-agent.nix
       ./modules/cluster-hosts.nix
+      ./modules/kustomize.nix
+      ./modules/kustomize-deploy.nix
     ];
 
     sharedModules =

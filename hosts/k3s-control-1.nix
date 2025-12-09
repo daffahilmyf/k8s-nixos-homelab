@@ -20,4 +20,16 @@
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
+
+  custom.kustomizeDeploy = {
+    enable = true;
+    overlays = [
+      { name = "cert-manager";     path = ../deployments/cert-manager; }
+      { name = "metallb";          path = ../deployments/metallb; }
+      { name = "gateway-api";       path = ../deployments/gateway-api; }
+      { name = "argocd";            path = ../deployments/argocd; }
+      { name = "portainer";         path = ../deployments/portainer; }
+      { name = "victoria";          path = ../deployments/victoria; }
+    ];
+  };
 }
