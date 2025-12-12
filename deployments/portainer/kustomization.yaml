@@ -3,4 +3,4 @@ kind: Kustomization
 namespace: portainer
 resources:
   - namespace.yaml
-  - https://downloads.portainer.io/portainer-ce-2.22.2.yaml
+  - https://downloads.portainer.io/ce-lts/portainer-lb.yaml
