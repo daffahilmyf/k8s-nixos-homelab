@@ -3,6 +3,6 @@ kind: Kustomization
 namespace: cilium-system
 resources:
   - namespace.yaml
-  - https://github.com/cilium/cilium/releases/download/v1.15.3/cilium.yaml
-patchesStrategicMerge:
+  - https://raw.githubusercontent.com/cilium/cilium/v1.15.3/install/kubernetes/quick-install.yaml
+patches:
   - cilium-config.yaml
