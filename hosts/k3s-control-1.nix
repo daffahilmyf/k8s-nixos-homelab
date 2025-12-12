@@ -20,6 +20,8 @@
     enable = true;
   };
 
+  custom.kustomize.enable = true;
+
   # Export kubeconfig path so kubectl and other tools can find it.
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
