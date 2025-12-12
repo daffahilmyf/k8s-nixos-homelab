@@ -98,3 +98,9 @@ Each configuration inherits:
 - Keep configurations under version control and update `flake.lock` as needed when bumping `nixpkgs` or `sops-nix`.
 
 Treat the repo like production infra: code review changes, run `nixos-rebuild switch --flake .#<host>` after each update, and rotate secrets regularly.
+
+## Cilium dataplane
+
+- The new `deployments/cilium` overlay pulls the Cilium `v1.15.3` manifest and patches `cilium-config` to enforce strict kube-proxy replacement, BPF masquerading, VXLAN tunneling, and the auto-direct route optimisations introduced for hardening.
+- Every host now sets `custom.cilium.enable = true` (see `hosts/k3s-control-1.nix` and the two workers), which lets `modules/cluster-bootstrap.nix` append `--disable kube-proxy` to `services.k3s.extraFlags`; this keeps the upstream proxy from racing with Cilium.
+- Apply the overlay as part of `./deploy-all.sh` (it runs first) or manually with `kubectl apply -k deployments/cilium` once the control plane is healthy.

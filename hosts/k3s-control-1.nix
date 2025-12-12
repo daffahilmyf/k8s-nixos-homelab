@@ -16,13 +16,17 @@
   };
   custom.role = "control-plane";
 
+  custom.cilium = {
+    enable = true;
+  };
+
   # Export kubeconfig path so kubectl and other tools can find it.
   environment.variables = {
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
 
   custom.kustomizeDeploy = {
-    enable = true;
+    enable = false;
     overlays = [
       { name = "cert-manager";     path = ../deployments/cert-manager; }
       { name = "metallb";          path = ../deployments/metallb; }
