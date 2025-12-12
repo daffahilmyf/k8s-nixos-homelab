@@ -3,7 +3,6 @@ set -euo pipefail
 
 # Source list of overlays in the same order the Nix configuration used.
 declare -a overlays=(
-  "deployments/cilium"
   "deployments/cert-manager"
   "deployments/metallb"
   "deployments/gateway-api"

@@ -16,10 +16,6 @@
   };
   custom.role = "control-plane";
 
-  custom.cilium = {
-    enable = true;
-  };
-
   custom.kustomize.enable = true;
 
   # Export kubeconfig path so kubectl and other tools can find it.
