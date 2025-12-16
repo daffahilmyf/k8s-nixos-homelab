@@ -2,7 +2,6 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: metallb-system
 resources:
-  - metallb-crds.yaml
   - metallb.yaml
   - values.yaml
   - l2-advertisement.yaml
