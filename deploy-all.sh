@@ -16,6 +16,9 @@ KUBECONFIG="${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
 
 cd "$(dirname "$0")"
 
+echo "Installing MetalLB CRDs"
+kubectl apply -f deployments/metallb/metallb-crds.yaml
+
 for overlay in "${overlays[@]}"; do
   echo "Applying ${overlay}"
   kustomize build "$overlay" | kubectl apply -f -
