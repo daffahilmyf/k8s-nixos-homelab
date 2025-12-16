@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: victoria-logs
-          image: victoriametrics/victoria-logs:v1.44.3
+          image: victoriametrics/victoria-logs:v1.41.0
           args:
             - -httpListenAddr=:8080
             - -search.listenAddr=:7070
