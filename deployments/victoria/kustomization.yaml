@@ -2,7 +2,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: monitoring
 labels:
-  - name: monitoring
+  - label: monitoring
     value: victoria-stack
 resources:
   - namespace.yaml
