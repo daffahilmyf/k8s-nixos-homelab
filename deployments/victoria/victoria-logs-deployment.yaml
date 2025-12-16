@@ -19,13 +19,9 @@ spec:
           image: victoriametrics/victoria-logs:v1.41.0
           args:
             - -httpListenAddr=:8080
-            - -search.listen-addr=:7070
-            - -search.store-paths=/victoria-logs-data
           ports:
             - containerPort: 8080
               name: http
-            - containerPort: 7070
-              name: search
           volumeMounts:
             - name: data
               mountPath: /victoria-logs-data
