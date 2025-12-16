@@ -5,8 +5,8 @@ metadata:
   namespace: argocd
 spec:
   parentRefs:
-    - name: contour-gateway
-      namespace: projectcontour
+    - name: traefik-gateway
+      namespace: traefik-system
   hostnames:
     - argocd.tesutotech.my.id
   rules:

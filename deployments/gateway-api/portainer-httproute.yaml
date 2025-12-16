@@ -5,8 +5,8 @@ metadata:
   namespace: portainer
 spec:
   parentRefs:
-    - name: contour-gateway
-      namespace: projectcontour
+    - name: traefik-gateway
+      namespace: traefik-system
   hostnames:
     - portainer.tesutotech.my.id
   rules:

@@ -36,7 +36,6 @@ in {
 
     services.k3s.extraFlags =
       lib.optionals isControl [
-        "--disable traefik"
         "--disable servicelb"
       ]
       ++ lib.optionals isControl [
