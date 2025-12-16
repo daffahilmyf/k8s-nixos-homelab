@@ -5,10 +5,11 @@ set -euo pipefail
 declare -a overlays=(
   "deployments/cert-manager"
   "deployments/metallb"
-  "deployments/gateway-api"
   "deployments/argocd"
   "deployments/portainer"
   "deployments/victoria"
+  # "deployments/gateway-api"
+
 )
 
 KUBECONFIG="${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
