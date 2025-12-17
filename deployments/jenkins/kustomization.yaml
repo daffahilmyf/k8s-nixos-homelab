@@ -9,4 +9,10 @@ resources:
   - jenkins-pvc.yaml
   - jenkins-deployment.yaml
   - jenkins-service.yaml
-  - jenkins-resources.yaml
+patches:
+  - path: jenkins-resources.yaml
+    target:
+      version: v1
+      kind: Deployment
+      name: jenkins
+      namespace: jenkins
