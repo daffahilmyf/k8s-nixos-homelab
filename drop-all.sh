@@ -3,14 +3,13 @@ set -euo pipefail
 
 # Drop the same overlays as deploy-all so the cluster mirrors the repository state.
 declare -a overlays=(
+  "deployments/gateway-api"
   "deployments/cert-manager"
   "deployments/metallb"
   "deployments/argocd"
-  "deployments/gateway-api"
   "deployments/portainer"
   "deployments/victoria"
-  # "deployments/gateway-api"
-
+  
 )
 
 KUBECONFIG="${KUBECONFIG:-/etc/rancher/k3s/k3s.yaml}"
