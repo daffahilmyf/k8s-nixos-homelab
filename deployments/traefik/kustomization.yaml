@@ -7,4 +7,5 @@ resources:
   - clusterrolebinding.yaml
   - deployment.yaml
   - service.yaml
+patchesStrategicMerge:
   - traefik-resources.yaml
