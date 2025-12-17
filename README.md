@@ -109,3 +109,49 @@ Treat the repo like production infra: code review changes, run `nixos-rebuild sw
 
 - The `deployments/traefik` overlay now deploys Traefik v2 with `--providers.kubernetesgateway`, exposes ports 80/443 via MetalLB at `192.168.100.220`, and grants it RBAC to watch Gateway API resources.
 - Since the control plane disables the bundled Traefik (`modules/cluster-bootstrap.nix`), the overlay provides the single instance that accepts `Gateway`/`HTTPRoute` attachments, making the `deployments/gateway-api` overlay functional.
+
+## Jenkins overlay
+
+- The `deployments/jenkins` overlay provisions a `jenkins` namespace with a PVC-backed `jenkins` Deployment and ClusterIP service. The Deployment mounts `/var/jenkins_home` from a 5 Gi `PersistentVolumeClaim` using the `generic` storage class and runs the official `jenkins/jenkins:lts` image with basic readiness/liveness probes.
+- `deployments/gateway-api/httproute-jenkins.yaml` attaches the Jenkins Service to the Traefik Gateway via `jenkins.tesutotech.my.id`, so Cloudflare Tunnel (or another DNS) must resolve that hostname to `192.168.100.220` and preserve the original `Host` header when proxying HTTPS traffic.
+- Apply the overlay with `kustomize build deployments/jenkins | kubectl apply -f -` (or re-run `./deploy-all.sh` now that Jenkins is added to the overlay list) to bring Jenkins online; the HTTPRoute will then allow Traefik to route browser traffic to Jenkins's web UI.
+
+### Kubernetes-based agent autoscaling
+
+- Jenkins ships with a Kubernetes plugin that provisions worker pods on demand. With the above overlay, you already have:
+  * a dedicated `jenkins` ServiceAccount plus ClusterRole/Binding (`deployments/jenkins/jenkins-serviceaccount.yaml`, `jenkins-clusterrole.yaml`, `jenkins-clusterrolebinding.yaml`),
+  * the permissions to create pods, secrets, configmaps, services, and jobs required by the plugin.
+- Configure the Jenkins Kubernetes cloud by keeping `Kubernetes URL` blank (so it uses the in-cluster API) and pointing `Kubernetes Namespace` to `jenkins`. Create a Jenkins credential of type **Secret Text** that holds the service account token:
+  ```
+  token=$(kubectl -n jenkins get secret $(kubectl -n jenkins get sa jenkins -o jsonpath='{.secrets[0].name}') -o jsonpath='{.data.token}' | base64 --decode)
+  ```
+  Store that `token` as a Jenkins credential (ID `k3s-jenkins`) and select it when configuring the cloud.
+- Add a Pod Template inside the cloud:
+  * Label: `k8s-agent`
+  * Containers: use `jenkins/inbound-agent:lts` with args `$(JENKINS_SECRET) $(JENKINS_NAME)`
+  * Resource requests/limits tuned for your workers (e.g., `500m` CPU, `1Gi` memory per agent).
+* Set the template's **Usage** to "Use this node as much as possible" so agents stay idle rather than blocking builds.
+- When you configure your pipelines or freestyle jobs, target the label `k8s-agent`; Jenkins will then create pods on the worker nodes as needed, keeping the control node (and Jenkins master) relatively light.
+
+## Resource posture
+
+- Every deployment in this repo runs on low-resource hardware, so tighten CPU/memory requests and limits inside each overlay to the smallest values that still allow your CI jobs to finish. The Jenkins overlay already exposes the agent resource knobs inside the Kubernetes cloud (see `README.md:121-134`), but you can also add `resources.requests` / `resources.limits` blocks to the Traefik, Argocd, Portainer, Victoria, Metallb, and Gateway manifests if you need to force strict packing.
+- Traefik, Portainer, the Argo CD server, Victoria Metrics, and the Jenkins master all now define conservative requests/limits so they run comfortably on your control-plane VM while the workers tackle the heavy builds (`deployments/traefik/traefik-resources.yaml`, `deployments/portainer/portainer-resources.yaml`, `deployments/argocd/argocd-server-resources.yaml`, `deployments/victoria/victoria-resources.yaml`, `deployments/jenkins/jenkins-resources.yaml`). Argo CD now asks for 1 CPU / 1 GiB (with a 1.5 CPU/1.5 GiB ceiling), Jenkins now requests 1 CPU and 1.5 GiB (with a 2 CPU/2 GiB ceiling), and you can adjust the other patches upward only if you see actual contention.
+- On k3s itself you can enforce a default `LimitRange` for the `jenkins`, `portainer`, and `argocd` namespaces that caps CPU/memory per pod further. Apply something like:
+  ```
+  apiVersion: v1
+  kind: LimitRange
+  metadata:
+    name: namespace-limits
+    namespace: jenkins
+  spec:
+    limits:
+      - type: Container
+        defaultRequest:
+          cpu: 100m
+          memory: 128Mi
+        default:
+          cpu: 200m
+          memory: 256Mi
+  ```
+  Adjust each namespace’s limits according to the workload. This keeps the control-plane pods light while still letting you run occasional heavier tasks on the workers.

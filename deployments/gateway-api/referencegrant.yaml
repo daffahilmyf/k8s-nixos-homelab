@@ -11,9 +11,12 @@ spec:
     - group: gateway.networking.k8s.io
       kind: HTTPRoute
       namespace: argocd
-    - group: gateway.networking.k8s.io
-      kind: HTTPRoute
-      namespace: portainer
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: portainer
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+    namespace: jenkins
   to:
     - group: gateway.networking.k8s.io
       kind: Gateway

@@ -14,3 +14,5 @@ patches:
         namespace: portainer
       spec:
         type: ClusterIP
+patchesStrategicMerge:
+  - portainer-resources.yaml

@@ -8,6 +8,7 @@ declare -a overlays=(
   "deployments/traefik"
   "deployments/argocd"
   "deployments/portainer"
+  "deployments/jenkins"
   "deployments/victoria"
   "deployments/gateway-api"
 

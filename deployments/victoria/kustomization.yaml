@@ -7,3 +7,5 @@ resources:
   - namespace.yaml
   - victoria-metrics-service.yaml
   - victoria-metrics-statefulset.yaml
+patchesStrategicMerge:
+  - victoria-resources.yaml
