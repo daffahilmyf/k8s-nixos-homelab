@@ -12,4 +12,8 @@ spec:
       targetPort: 8080
       protocol: TCP
       name: http
+    - port: 8400
+      targetPort: 8400
+      protocol: TCP
+      name: search
   type: ClusterIP
