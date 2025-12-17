@@ -6,7 +6,7 @@ metadata:
 spec:
   parentRefs:
     - name: traefik-gateway
-      namespace: gateway-system
+      namespace: traefik-system
   hostnames:
     - argo.tesutotech.my.id
   rules:

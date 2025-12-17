@@ -29,6 +29,13 @@ spec:
           volumeMounts:
             - name: data
               mountPath: /victoria-metrics-data
-      volumes:
-        - name: data
-          emptyDir: {}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: generic
+        resources:
+          requests:
+            storage: 5Gi

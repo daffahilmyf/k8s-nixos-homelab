@@ -6,3 +6,4 @@ resources:
   - gateway.yaml
   - httproute-argo.yaml
   - portainer-httproute.yaml
+  - referencegrant.yaml

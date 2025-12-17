@@ -1,8 +1,8 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: ReferenceGrant
 metadata:
-  name: gateway-system-allow-cross-namespace
-  namespace: gateway-system
+  name: traefik-gateway-allow-cross-namespace
+  namespace: traefik-system
 spec:
   from:
     - group: gateway.networking.k8s.io
