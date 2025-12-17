@@ -7,5 +7,3 @@ resources:
   - namespace.yaml
   - victoria-metrics-service.yaml
   - victoria-metrics-statefulset.yaml
-  - victoria-logs-service.yaml
-  - victoria-logs-deployment.yaml
