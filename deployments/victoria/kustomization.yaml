@@ -7,5 +7,9 @@ resources:
   - namespace.yaml
   - victoria-metrics-service.yaml
   - victoria-metrics-statefulset.yaml
-patchesStrategicMerge:
-  - victoria-resources.yaml
+patches:
+  - path: victoria-resources.yaml
+    target:
+      version: v1
+      kind: StatefulSet
+      name: victoria-metrics
