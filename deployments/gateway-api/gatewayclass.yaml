@@ -3,5 +3,5 @@ kind: GatewayClass
 metadata:
   name: traefik-gatewayclass
 spec:
-  controller: traefik.io/gateway
+  controllerName: traefik.io/gateway
   description: Traefik controller provided by k3s, driving Gateway API networking.
