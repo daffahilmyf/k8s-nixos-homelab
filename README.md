@@ -83,7 +83,7 @@ Each configuration inherits:
 - **Networking** (`modules/networking.nix` + `modules/cluster-hosts.nix`): static IP/DNS/gateway, DHCP toggling, and shared `/etc/hosts` entries for the three nodes.
 - **Packages** (`modules/packages.nix`): baseline CLI tools (curl, wget, git, vim, htop, jq, yq, sops, etc.).
 - **Role detection** (`modules/node-role.nix`): sets `custom.role`, flips k3s between server/agent, and installs kube tooling only on control nodes.
-- **k3s bootstrap** (`modules/k3s.nix` + `modules/cluster-bootstrap.nix`): default server/agent flags, join token wiring, and traefik disablement on the control plane.
+- **k3s bootstrap** (`modules/k3s.nix` + `modules/cluster-bootstrap.nix`): default server/agent flags, join token wiring, and built-in Traefik/ServiceLB disablement on the control plane so you can install a Gateway-capable Traefik from the overlay stack.
 - **Firewall** (`modules/firewall.nix`): enables the firewall with role-aware allowed ports (API/etcd on the control plane, kubelet/VXLAN on workers).
 - **Cloudflare tunnel** (`modules/cloudflared.nix`): only included on `k3s-control-1` so workers stay lean.
 - **Git/SSH identity** (inline module in `flake.nix` + `modules/git.nix`/`modules/ssh.nix`): consistent gitconfig and enforced SSH key auth.
@@ -104,3 +104,8 @@ Treat the repo like production infra: code review changes, run `nixos-rebuild sw
 - The new `deployments/cilium` overlay pulls the Cilium `v1.15.3` manifest and patches `cilium-config` to enforce strict kube-proxy replacement, BPF masquerading, VXLAN tunneling, and the auto-direct route optimisations introduced for hardening.
 - Every host now sets `custom.cilium.enable = true` (see `hosts/k3s-control-1.nix` and the two workers), which lets `modules/cluster-bootstrap.nix` append `--disable kube-proxy` to `services.k3s.extraFlags`; this keeps the upstream proxy from racing with Cilium.
 - Apply the overlay as part of `./deploy-all.sh` (it runs first) or manually with `kubectl apply -k deployments/cilium` once the control plane is healthy.
+
+## Traefik Gateway overlay
+
+- The `deployments/traefik` overlay now deploys Traefik v2 with `--providers.kubernetesgateway`, exposes ports 80/443 via MetalLB at `192.168.100.220`, and grants it RBAC to watch Gateway API resources.
+- Since the control plane disables the bundled Traefik (`modules/cluster-bootstrap.nix`), the overlay provides the single instance that accepts `Gateway`/`HTTPRoute` attachments, making the `deployments/gateway-api` overlay functional.

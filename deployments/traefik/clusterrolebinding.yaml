@@ -1,0 +1,12 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: traefik-gateway
+subjects:
+  - kind: ServiceAccount
+    name: traefik-gateway
+    namespace: traefik
+roleRef:
+  kind: ClusterRole
+  name: traefik-gateway
+  apiGroup: rbac.authorization.k8s.io

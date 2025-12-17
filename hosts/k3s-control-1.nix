@@ -25,13 +25,14 @@
 
   custom.kustomizeDeploy = {
     enable = false;
-    overlays = [
-      { name = "cert-manager";     path = ../deployments/cert-manager; }
-      { name = "metallb";          path = ../deployments/metallb; }
-      { name = "gateway-api";       path = ../deployments/gateway-api; }
-      { name = "argocd";            path = ../deployments/argocd; }
-      { name = "portainer";         path = ../deployments/portainer; }
-      { name = "victoria";          path = ../deployments/victoria; }
-    ];
+  overlays = [
+    { name = "cert-manager";     path = ../deployments/cert-manager; }
+    { name = "metallb";          path = ../deployments/metallb; }
+    { name = "traefik";          path = ../deployments/traefik; }
+    { name = "argocd";            path = ../deployments/argocd; }
+    { name = "portainer";         path = ../deployments/portainer; }
+    { name = "victoria";          path = ../deployments/victoria; }
+    { name = "gateway-api";       path = ../deployments/gateway-api; }
+  ];
   };
 }

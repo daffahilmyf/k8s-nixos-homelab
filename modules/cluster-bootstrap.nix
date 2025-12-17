@@ -37,6 +37,7 @@ in {
     services.k3s.extraFlags =
       lib.optionals isControl [
         "--disable servicelb"
+        "--disable traefik"
       ]
       ++ lib.optionals isControl [
         "--token-file ${tokenPath}"
