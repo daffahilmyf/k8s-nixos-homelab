@@ -1,11 +1,20 @@
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: Gateway
 metadata:
+  namespace: gateway-system
   name: traefik-gateway
-  namespace: traefik-system
 spec:
   gatewayClassName: traefik-gatewayclass
   listeners:
     - name: http
-      protocol: HTTP
       port: 80
+      protocol: HTTP
+      allowedRoutes:
+        namespaces:
+          from: All
+    - name: https
+      port: 443
+      protocol: HTTPS
+      allowedRoutes:
+        namespaces:
+          from: All
