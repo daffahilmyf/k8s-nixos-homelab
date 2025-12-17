@@ -1,8 +1,16 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: portainer
 resources:
-  - namespace.yaml
-  - https://downloads.portainer.io/ce-lts/portainer-lb.yaml
-patchesStrategicMerge:
-  - service-clusterip.yaml
+  - portainer-lb.yaml
+patches:
+  - target:
+      kind: Service
+      name: portainer
+    patch: |-
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: portainer
+        namespace: portainer
+      spec:
+        type: ClusterIP
