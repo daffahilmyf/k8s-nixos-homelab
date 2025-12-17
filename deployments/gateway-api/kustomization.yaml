@@ -4,5 +4,5 @@ resources:
   - namespace.yaml
   - gatewayclass.yaml
   - gateway.yaml
-  - argocd-httproute.yaml
+  - httproute-argo.yaml
   - portainer-httproute.yaml
