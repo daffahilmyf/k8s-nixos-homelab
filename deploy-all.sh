@@ -20,6 +20,9 @@ cd "$(dirname "$0")"
 echo "Installing MetalLB CRDs"
 kubectl apply -f deployments/metallb/metallb-crds.yaml
 
+echo "Installing Gateway API CRDs"
+kubectl apply -f deployments/gateway-api/standard-install.yaml
+
 for overlay in "${overlays[@]}"; do
   echo "Applying ${overlay}"
   kustomize build "$overlay" | kubectl apply -f -
