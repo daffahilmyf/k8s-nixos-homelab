@@ -4,5 +4,10 @@ namespace: argocd
 resources:
   - namespace.yaml
   - https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
-patchesStrategicMerge:
-  - argocd-server-resources.yaml
+patches:
+  - path: argocd-server-resources.yaml
+    target:
+      version: v1
+      kind: Deployment
+      name: argocd-server
+      namespace: argocd
