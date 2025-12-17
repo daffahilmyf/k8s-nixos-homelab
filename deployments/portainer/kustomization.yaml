@@ -3,3 +3,5 @@ kind: Kustomization
 namespace: portainer
 resources:
   - https://downloads.portainer.io/ce-lts/portainer-lb.yaml
+patchesStrategicMerge:
+  - service-clusterip.yaml

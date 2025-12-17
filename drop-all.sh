@@ -6,6 +6,7 @@ declare -a overlays=(
   "deployments/cert-manager"
   "deployments/metallb"
   "deployments/argocd"
+  "deployments/gateway-api"
   "deployments/portainer"
   "deployments/victoria"
   # "deployments/gateway-api"

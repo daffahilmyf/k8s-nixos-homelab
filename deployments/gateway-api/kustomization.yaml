@@ -9,3 +9,4 @@ resources:
   - httproute-argo.yaml
   - referencegrant.yaml
   - example-backend.yaml
+  - httproute-portainer.yaml
