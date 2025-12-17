@@ -1,7 +1,7 @@
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  namespace: gateway-system
+  namespace: traefik-system
   name: traefik-gateway
 spec:
   gatewayClassName: traefik-gatewayclass
