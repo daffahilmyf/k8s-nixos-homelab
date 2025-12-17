@@ -4,4 +4,4 @@ metadata:
   name: traefik-gatewayclass
 spec:
   controllerName: traefik.io/gateway
-  description: Traefik controller provided by k3s, driving Gateway API networking.
+  description: Traefik controller from k3s.
