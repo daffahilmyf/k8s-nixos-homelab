@@ -9,7 +9,7 @@
   custom.networking = {
     hostName = "k3s-worker-2";
     interface = "ens18";
-    staticIPv4 = "192.168.100.162";
+    staticIPv4 = "192.168.100.152";
     prefixLength = 24;
     gateway = "192.168.100.1";
     nameservers = ["1.1.1.1" "8.8.8.8"];

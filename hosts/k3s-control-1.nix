@@ -9,7 +9,7 @@
   custom.networking = {
     hostName = "k3s-control-1";
     interface = "ens18";
-    staticIPv4 = "192.168.100.160";
+    staticIPv4 = "192.168.100.150";
     prefixLength = 24;
     gateway = "192.168.100.1";
     nameservers = ["1.1.1.1" "8.8.8.8"];
@@ -23,16 +23,4 @@
     KUBECONFIG = "/etc/rancher/k3s/k3s.yaml";
   };
 
-  custom.kustomizeDeploy = {
-    enable = false;
-  overlays = [
-    { name = "cert-manager";     path = ../deployments/cert-manager; }
-    { name = "metallb";          path = ../deployments/metallb; }
-    { name = "traefik";          path = ../deployments/traefik; }
-    { name = "argocd";            path = ../deployments/argocd; }
-    { name = "portainer";         path = ../deployments/portainer; }
-    { name = "victoria";          path = ../deployments/victoria; }
-    { name = "gateway-api";       path = ../deployments/gateway-api; }
-  ];
-  };
 }

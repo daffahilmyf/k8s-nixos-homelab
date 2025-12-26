@@ -15,6 +15,12 @@ spec:
     - name: https
       port: 443
       protocol: HTTPS
+      tls:
+        mode: Terminate
+        credentialRefs:
+          - group: ""
+            kind: Secret
+            name: traefik-gateway-cert
       allowedRoutes:
         namespaces:
           from: All

@@ -8,3 +8,5 @@ resources:
   - httproute-jenkins.yaml
   - portainer-httproute.yaml
   - referencegrant.yaml
+  - traefik-selfsigned-issuer.yaml
+  - traefik-gateway-certificate.yaml
