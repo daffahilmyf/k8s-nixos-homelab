@@ -98,6 +98,18 @@
           ];
       };
 
+      k3s-worker-3 = nixpkgs.lib.nixosSystem {
+        system = "x86_64-linux";
+
+        specialArgs = {inherit inputs;};
+
+        modules =
+          sharedModules
+          ++ [
+            ./hosts/k3s-worker-3.nix
+          ];
+      };
+
       default = nixpkgs.lib.nixosSystem {
         system = "x86_64-linux";
 
