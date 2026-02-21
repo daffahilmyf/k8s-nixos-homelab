@@ -13,5 +13,9 @@
       "k3s-worker-2"
       "k3s-worker-2.home.arpa"
     ];
+    "192.168.100.153" = [
+      "k3s-worker-3"
+      "k3s-worker-3.home.arpa"
+    ];
   };
 }
