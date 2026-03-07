@@ -7,7 +7,6 @@
   gateway,
   nameservers,
   domain ? null,
-  enableKustomize ? false,
 }:
 { lib, ... }:
 {
@@ -29,8 +28,6 @@
   };
 
   custom.role = role;
-
-  custom.kustomize.enable = lib.mkDefault enableKustomize;
 
   # Export kubeconfig path so kubectl and other tools can find it.
   environment.variables = lib.mkIf (role == "control-plane") {

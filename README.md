@@ -1,6 +1,6 @@
 # NixOS k3s Cluster Flake
 
-Lightweight NixOS-based k3s cluster for Proxmox VMs. The flake defines one control-plane node plus three workers that share a common module stack (base system, networking, firewall, shared host mappings, k3s bootstrap, Git/SSH identity, and SOPS integration).
+Lightweight NixOS-based k3s cluster for Proxmox VMs. The flake defines three control-plane nodes plus three workers that share a common module stack (base system, networking, firewall, shared host mappings, k3s bootstrap, Git/SSH identity, and SOPS integration).
 
 ## Layout
 
@@ -8,7 +8,7 @@ Lightweight NixOS-based k3s cluster for Proxmox VMs. The flake defines one contr
 | --- | --- |
 | `flake.nix` | Entry point defining shared modules and all `nixosConfigurations`. |
 | `hosts/` | Host templates and the hardware config import. |
-| `modules/` | Reusable modules (base, networking, packages, node roles, firewall, `/etc/hosts`, k3s bootstrap, git/ssh, sops, guest agent). |
+| `modules/` | Reusable modules (base, networking, packages, node roles, firewall, `/etc/hosts`, k3s bootstrap, k3s HA, kube-vip, longhorn, git/ssh, sops, guest agent). |
 | `secrets/` | SOPS-encrypted secrets (root password hash, k3s join token). |
 | `.sops.yaml` | Encryption policy referencing your Age public key. |
 
@@ -38,7 +38,8 @@ Do **not** run `nixos-rebuild` until every prerequisite is satisfied:
 4. **k3s cluster token** - Run `sops secrets/k3s-token.yaml` and set `k3s_token` to a strong random string (e.g., `openssl rand -hex 32`). Every node reads the token so workers can join automatically.
 5. **Root password hash** - Run `sops secrets/root-password.yaml` and set `root_password_hash` to the output of `mkpasswd -m sha-512 'temp-pass'`.
 6. **Networking** - Adjust each host's `hostDefs` entry in `flake.nix` (static IP, gateway, nameservers, domain, or `useDHCP`). Shared `/etc/hosts` entries already map the cluster nodes.
-7. **SSH key + Git identity** - Replace the placeholder SSH public key and Git identity in `flake.nix`'s `sharedIdentityModule`.
+7. **VIP** - Ensure `custom.cluster.vip` and `custom.kubeVip.vip` point to a free IP on the same subnet (default: `192.168.100.154`).
+8. **SSH key + Git identity** - Replace the placeholder SSH public key and Git identity in `flake.nix`'s `sharedIdentityModule`.
 
 Only after these steps should you proceed to build the system.
 
@@ -49,7 +50,7 @@ On each VM (booted into the NixOS installer or an existing system):
 ```bash
 git clone <this-repo> /etc/nixos
 cd /etc/nixos
-nixos-rebuild switch --flake .#k3s-control-1   # or k3s-worker-1 / k3s-worker-2 / k3s-worker-3
+nixos-rebuild switch --flake .#k3s-control-1   # or k3s-control-2 / k3s-control-3 / k3s-worker-1 / k3s-worker-2 / k3s-worker-3
 ```
 
 Replace the flake attribute with the host you are deploying.
@@ -60,18 +61,26 @@ Replace the flake attribute with the host you are deploying.
 2. Update `.sops.yaml` with the Age public key.
 3. Edit secrets with `sops` (`secrets/root-password.yaml`, `secrets/k3s-token.yaml`).
 4. Replace SSH key and Git identity in `flake.nix`.
-5. Hardening: set `custom.ssh.enforce = true`, set `custom.ssh.authorizedKeys`, and remove or null `custom.auth.rootPassword`.
-6. Deploy a host:
+5. Confirm the VIP (`custom.cluster.vip` and `custom.kubeVip.vip`) is free on your LAN.
+6. Hardening: set `custom.ssh.enforce = true`, set `custom.ssh.authorizedKeys`, and remove or null `custom.auth.rootPassword`.
+7. Deploy the control plane in order:
    ```bash
    nixos-rebuild switch --flake .#k3s-control-1
+   nixos-rebuild switch --flake .#k3s-control-2
+   nixos-rebuild switch --flake .#k3s-control-3
    ```
+8. Deploy workers:
+   ```bash
+   nixos-rebuild switch --flake .#k3s-worker-1
+   ```
+   Repeat for `k3s-worker-2` and `k3s-worker-3`.
 
 ### First-time install with the default template
 
 Use this when bootstrapping a new VM that should not run k3s yet:
 
 1. Copy your VM's hardware config to `hosts/hardware-configuration.nix`.
-2. Ensure `secrets/root-password.yaml`, `secrets/cloudflared-token.yaml`, and `secrets/k3s-token.yaml` are updated via `sops`.
+2. Ensure `secrets/root-password.yaml` and `secrets/k3s-token.yaml` are updated via `sops`.
 3. Place the shared Age key at `/var/lib/sops-nix/key.txt`.
 4. (Optional) Pre-set a static IP by exporting `DEFAULT_STATIC_IPV4`.
 5. Run:
@@ -99,6 +108,9 @@ Each configuration inherits:
 - **Packages** (`modules/packages.nix`): baseline CLI tools (curl, wget, git, vim, htop, jq, yq, sops, etc.).
 - **Role detection** (`modules/node-role.nix`): sets `custom.role`, flips k3s between server/agent, and installs kube tooling only on control nodes.
 - **k3s bootstrap** (`modules/k3s.nix` + `modules/cluster-bootstrap.nix`): default server/agent flags, join token wiring, and built-in Traefik/ServiceLB disablement on the control plane.
+- **k3s HA** (`modules/k3s-ha.nix`): control-plane VIP, TLS SANs, and single-node cluster init.
+- **kube-vip** (`modules/kube-vip.nix`): control-plane virtual IP managed inside the cluster.
+- **Longhorn** (`modules/longhorn.nix`): Longhorn node prerequisites and optional manifest deployment.
 - **Firewall** (`modules/firewall.nix`): role-aware ports for k3s (control-plane: `6443`, `9345`, `2379`, `2380`, `10250`, `8472/udp`; worker: `10250`, `8472/udp`).
 - **Git/SSH identity** (inline module in `flake.nix` + `modules/git.nix`/`modules/ssh.nix`): gitconfig and SSH access settings.
 - **Guest tooling** (`modules/guest-agent.nix`, `modules/sops.nix`, etc.): qemu guest agent, sops-nix integration, shared packages.
@@ -107,7 +119,9 @@ Each configuration inherits:
 
 - Replace the placeholder SSH public key in `flake.nix` before any deployment. By default, password auth and root login are enabled; set `custom.ssh.enforce = true` to require keys and disable password auth.
 - Worker nodes inherit the same secrets as the control plane (k3s token, root password hash).
-- If your control-plane endpoint changes, override `custom.cluster.apiServer` inside the worker host file. Otherwise they use the shared host mapping (`https://k3s-control-1:6443`).
+- If your control-plane endpoint changes, override `custom.cluster.apiServer` inside the worker host file. By default workers use the VIP endpoint.
+- k3s HA requires an ordered bootstrap: run `k3s-control-1` first, then `k3s-control-2`, then `k3s-control-3`, then workers.
+- Longhorn deployment is enabled by default and pulls the manifest from the internet; disable with `custom.longhorn.deploy = false` if you want to manage it manually.
 - Secrets stay encrypted at rest. After editing with `sops`, commit the ciphertext; the Age private key is only on `/var/lib/sops-nix/key.txt` per host.
 - Keep configurations under version control and update `flake.lock` as needed when bumping `nixpkgs` or `sops-nix`.
 

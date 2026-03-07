@@ -8,7 +8,6 @@ let
   isControl = config.custom.role == "control-plane";
   isWorker = config.custom.role == "worker";
   tokenPath = config.sops.secrets.k3s_token.path;
-  useCilium = config.custom.cilium.enable;
 
   sopsServiceName = "sops-nix";
   hasSopsService = builtins.hasAttr sopsServiceName config.systemd.services;
@@ -46,9 +45,7 @@ in {
         "--server ${config.custom.cluster.apiServer}"
         "--token-file ${tokenPath}"
       ]
-      ++ lib.optionals useCilium [
-        "--disable kube-proxy"
-      ];
+      ;
 
     systemd.services.k3s = {
       wants = [ "network-online.target" ] ++ sopsDeps;

@@ -15,7 +15,14 @@
       k3s-control-1 = {
         staticIPv4 = "192.168.100.150";
         role = "control-plane";
-        enableKustomize = true;
+      };
+      k3s-control-2 = {
+        staticIPv4 = "192.168.100.155";
+        role = "control-plane";
+      };
+      k3s-control-3 = {
+        staticIPv4 = "192.168.100.156";
+        role = "control-plane";
       };
       k3s-worker-1 = {
         staticIPv4 = "192.168.100.151";
@@ -56,6 +63,22 @@
         fullName = lib.mkDefault "Daffa Hilmy Fadhlurrohman";
       };
 
+      custom.cluster = {
+        vip = lib.mkDefault "192.168.100.154";
+        firstControl = lib.mkDefault "k3s-control-1";
+      };
+
+      custom.kubeVip = {
+        enable = lib.mkDefault true;
+        vip = lib.mkDefault "192.168.100.154";
+        interface = lib.mkDefault "ens18";
+      };
+
+      custom.longhorn = {
+        enable = lib.mkDefault true;
+        deploy = lib.mkDefault true;
+      };
+
       custom.ssh = {
         users = lib.mkDefault ["root"];
         authorizedKeys = lib.mkDefault [
@@ -78,6 +101,9 @@
       ./modules/firewall.nix
       ./modules/guest-agent.nix
       ./modules/cluster-hosts.nix
+      ./modules/k3s-ha.nix
+      ./modules/kube-vip.nix
+      ./modules/longhorn.nix
     ];
 
     sharedModules =
@@ -105,7 +131,6 @@
                 hostName = hostName;
                 staticIPv4 = def.staticIPv4;
                 role = def.role;
-                enableKustomize = def.enableKustomize or false;
                 interface = hostNet.interface;
                 prefixLength = hostNet.prefixLength;
                 gateway = hostNet.gateway;
