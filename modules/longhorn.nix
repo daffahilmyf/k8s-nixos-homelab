@@ -39,6 +39,7 @@ in {
 
   config = lib.mkIf cfg.enable {
     services.openiscsi.enable = true;
+    services.openiscsi.name = lib.mkDefault "iqn.2000-10.org.open-iscsi:${config.networking.hostName}";
     environment.systemPackages = with pkgs; [
       openiscsi
       nfs-utils
