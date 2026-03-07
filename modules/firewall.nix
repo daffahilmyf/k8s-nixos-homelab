@@ -5,7 +5,7 @@
 }: let
   role = config.custom.role;
 
-  controlTcp = [6443 2379 2380 10250];
+  controlTcp = [6443 9345 2379 2380 10250];
   controlUdp = [8472];
 
   workerTcp = [10250];

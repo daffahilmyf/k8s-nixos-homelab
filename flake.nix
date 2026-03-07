@@ -77,10 +77,7 @@
       ./modules/ssh.nix
       ./modules/firewall.nix
       ./modules/guest-agent.nix
-      ./modules/cilium.nix
       ./modules/cluster-hosts.nix
-      ./modules/kustomize.nix
-      ./modules/kustomize-deploy.nix
     ];
 
     sharedModules =
@@ -116,9 +113,7 @@
                 domain = hostNet.domain or null;
               })
             ]
-            ++ nixpkgs.lib.optionals (def.role == "control-plane") [
-              ./modules/cloudflared.nix
-            ];
+            ;
         })
         hostDefs)
       // {
